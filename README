@@ -1,0 +1,36 @@
+Crypt::OpenSSL::RSA is an XS perl module designed to provide basic RSA
+functionality.  It does this by providing a glue to the RSA functions
+in the openSSL library.  In particular, it provides the following functions:
+
+       loadPublicKey, loadPrivateKey - load a key from a string
+       getPublicKeyString, getPrivateKeyString - save a key to a string
+       generateKey - make a new key
+       encypt, decrypt 
+       setPaddingMode, getPaddingMode
+       size -  Returns the size, in bytes, of the key.
+       checkKey - checks the validity of a key.
+
+Bugs:
+       Currently many XS routines croak rather than trying to
+       intelligently signal an error.  This is mostly in cases
+       where a routine is called without adequate preparation,
+       such as asking to encrypt before setting a key.
+
+       There appears to be some small memory leaks in functions
+       (notably _loadKey, probably others).  This is presumably
+       due to failure to decrement a reference count somewhere - I
+       just haven't found out where yet.  In any event, the leak appears
+       to be reasonably small (a few bytes here and there).
+
+       RSA_NO_PADDING_MODE does not work - I don't know yet if
+       it's a problem with encryption, decryption, or both.
+
+       The openssl functions RSA_public_decrypt, RSA_private_decrypt,
+       RSA_sign and RSA_verify are not yet implemented.
+
+       Arguably, this module should be greatly extended and renamed
+       Crypt::OpenSSL::OpenSSL
+
+       There is no support for encrypting text larger than the key-size.
+
+       There is no Crypt::CBC support.

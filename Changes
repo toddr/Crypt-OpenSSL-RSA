@@ -1,0 +1,20 @@
+Revision history for Perl extension Crypt::OpenSSL::RSA.
+
+0.08  Sun Apr 01 23:04:31
+        - Changing method names to match convention
+
+0.07  Thu Mar 08 3:31:41 2001
+        - Allow seeding of the PRNG
+
+0.06  Thu Mar 08 12:40:04 2001
+        - Adding a readme file.
+
+0.05  Mon Feb 26 10:50:43 2001
+        - Removing signing and verification, due to bizarre bugs
+
+0.04  Fri Feb 23 10:41:33 2001
+        - Removing Base64 functionality and dependence
+
+0.01  Wed Feb 14 11:21:42 2001
+	- original version; created by h2xs 1.19
+
