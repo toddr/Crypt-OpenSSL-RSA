@@ -1,10 +1,14 @@
 Crypt::OpenSSL::RSA is an XS perl module designed to provide basic RSA
 functionality.  It does this by providing a glue to the RSA functions
-in the openSSL library.  In particular, it provides the following functions:
+in the OpenSSL library.  In particular, it provides the following functions:
 
        new_public_key, new_private_key - create a key from a string
        generate_key - make a new key
-       get_public_key_string, get_private_key_string - save a key to a string
+       get_private_key_string - save key to a string
+       get_public_key_string - save public portion of key to a string
+       get_public_key_x509_string - save public portion of key to a string,
+                                    using format compatibe with OpenSSL's
+                                    command-line rsa tool
        encrypt, decrypt, sign, verify,
        use_pkcs1_oaep_padding, use_pkcs1_padding,
        use_sslv23_padding, use_no_padding
@@ -18,9 +22,14 @@ Bugs:
   The openssl functions RSA_public_decrypt, RSA_private_decrypt are
   not yet implemented.
 
-  There is no support for encrypting text larger than the key-size.
-
   There is no Crypt::CBC support.
+
+  (Reported by Max Baker <max@warped.org>) For making under Redhat 8
+  or 9 you may need to supply the include path to the kerberos header
+  files when running make
+
+    make C_INCLUDE_PATH=/usr/kerberos/include
+
 
 NOTE: as of version 0.17, the following methods are DEPRECATED:
   - the no-arg new constructor - use new_from_public_key,
@@ -40,6 +49,6 @@ methods should be kept around longer/permanently; feel free to send
 email to me at iroberts@cpan.org, or visit
 http://perl-openssl.sourceforge.net/.
 
-Copyright (c) 2001-2003 Ian Robertson.  Crypt::OpenSSL::RSA is free
+Copyright (c) 2001-2004 Ian Robertson.  Crypt::OpenSSL::RSA is free
 software; you may redistribute it and/or modify it under the same
 terms as Perl itself.

@@ -1,5 +1,10 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.20  Sun Feb 15 2004 15:21:40
+        - Finally add support for the public key format produced by
+          "openssl rsa -pubout".
+        - Add comment in readme about locating kerberos files on redhat systems
+
 0.19  Sun Apr 27 2003 18:33:48
         - Revert back to old declaration style so that we no longer
           break under perl 5.005 (spotted by Rob Brown <bbb@cpan.org>).
