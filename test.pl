@@ -8,7 +8,7 @@
 
 use strict;
 my $loaded;
-BEGIN { $| = 1; print "1..12\n"; }
+BEGIN { $| = 1; print "1..13\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Crypt::OpenSSL::RSA;
 $loaded = 1;
@@ -38,17 +38,24 @@ sub my_test
     }
 }    
 
-# On platforms without a /dev/random, we need to manually seed.
-# In real life, the following would stink, but for testing
-# purposes, it suffices to seed with any old thing, even if it is
-# not actually random
+# On platforms without a /dev/random, we need to manually seed.  In
+# real life, the following would stink, but for testing purposes, it
+# suffices to seed with any old thing, even if it is not actually
+# random.  We'll at least emulate seeding from Crypt::OpenSSL::Random,
+# which is what we would have to do in "real life", since the private
+# data used by the OpenSSL random library apparently does not span
+# across perl XS modules.
 
-Crypt::OpenSSL::Random::random_seed("Here are 19 bytes...");
+Crypt::OpenSSL::Random::random_seed("Here are 20 bytes...");
+Crypt::OpenSSL::RSA::import_random_seed();
 
 # We should now be seeded, regardless.
-my_test(Crypt::OpenSSL::Random::random_status());
+# my_test(Crypt::OpenSSL::RSA::random_status());
 
 my $rsa = Crypt::OpenSSL::RSA->new();
+
+my_test($rsa->generate_key(512));
+my_test($rsa->size() * 8 == 512);
 
 my_test($rsa->generate_key(1024));
 my_test($rsa->size() * 8 == 1024);

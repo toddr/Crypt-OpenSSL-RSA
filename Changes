@@ -1,5 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.12  Thu Sep 06 22:44:17
+        - Fixing bug with Crypt::OpenSSL::Random interoperability
+        - Implementing patch from Thomas Linden <scip@daemon.de>
+          fixing a keysize bug
+        - Fixing email address in docs.
+
 0.11  Tue Apr 10 22:45:31
 	- Fixing bug in test.pl.
 

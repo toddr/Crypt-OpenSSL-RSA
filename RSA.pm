@@ -19,7 +19,7 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -37,9 +37,14 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
 
 =head1 SYNOPSIS
 
+  use Crypt::OpenSSL::Random;
   use Crypt::OpenSSL::RSA;
 
+  # not necessary if we have /dev/random:
+  Crypt::OpenSSL::Random::random_seed($good_entropy);
+
   $rsa_pub = new Crypt::OpenSSL::RSA();
+  $rsa_pub->import_random_seed();
 
   $rsa_pub->load_public_key($key_string);
   $ciphertext = $rsa->encrypt($plaintext);
@@ -248,9 +253,25 @@ exactly this size.
 This function validates the RSA key, returning 1 if the key is valid,
 0 otherwise.
 
-=cut
+=back
+
+=item import_random_seed
+
+Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
+libraries won't allow sharing of random structures across perl XS
+modules.
 
 =back
+
+=cut
+
+sub import_random_seed
+{
+    until ( _random_status() )
+    {
+        _random_seed( Crypt::OpenSSL::Random::random_bytes(20) );
+    }
+}
 
 =head1 BUGS
 
@@ -268,10 +289,12 @@ RSA_NO_PADDING_MODE does not work - I don't know yet if it's a problem with encr
 
 =head1 AUTHOR
 
-Ian Robertson, ian@cpan.com
+Ian Robertson, iroberts@cpan.com
 
 =head1 SEE ALSO
 
-perl(1), rsa(3), RSA_new(3), RSA_public_encrypt(3),
-RSA_size(3), RSA_generate_key(3), RSA_check_key(3)
+perl(1), Crypt::OpenSSL::Random(3), rsa(3), RSA_new(3),
+RSA_public_encrypt(3), RSA_size(3), RSA_generate_key(3),
+RSA_check_key(3)
+
 =cut

@@ -246,7 +246,7 @@ PPCODE:
     else
         exponent = 65535;
     
-    rsa = RSA_generate_key(1024, 65535, NULL, NULL);
+    rsa = RSA_generate_key(SvIV(bitsSV), 65535, NULL, NULL);
 
     if(rsa == NULL)
         XSRETURN_NO;
@@ -395,4 +395,28 @@ PPCODE:
 
     XPUSHs( sv_2mortal( newSViv( RSA_check_key(rsa) )));
     XSRETURN(1);
+}
+
+ # Seed the PRNG with user-provided bytes; returns true if the
+ # seeding was sufficient.
+
+void
+_random_seed(random_bytes_SV)
+   SV * random_bytes_SV;
+PPCODE:
+{
+   int random_bytes_length;
+   char *random_bytes;
+   random_bytes = SvPV(random_bytes_SV, random_bytes_length);
+   RAND_seed(random_bytes, random_bytes_length);
+   XPUSHs( sv_2mortal( newSViv( RAND_status() ) ) );
+}
+
+ # Returns true if the PRNG has enough seed data
+
+void
+_random_status()
+PPCODE:
+{
+    XPUSHs( sv_2mortal( newSViv( RAND_status() ) ) );
 }
