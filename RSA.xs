@@ -196,7 +196,11 @@ PROTOTYPES: DISABLE
 BOOT:
     ERR_load_crypto_strings();
 
-void _load_key(HV* rsa_HV, SV* private_flag_SV, SV* key_string_SV)
+void
+_load_key(rsa_HV, private_flag_SV, key_string_SV)
+    HV* rsa_HV;
+    SV* private_flag_SV;
+    SV* key_string_SV;
   PREINIT:
     int key_string_length;  /* Needed to pass to SvPV */
     char* key_string;
@@ -204,7 +208,7 @@ void _load_key(HV* rsa_HV, SV* private_flag_SV, SV* key_string_SV)
     RSA* rsa;
     BIO* stringBIO;
   CODE:
-    /* First, remove any old rsa structures, to avoid leakage */
+    /* First; remove any old rsa structures, to avoid leakage */
     free_RSA_key(rsa_HV);
 
     private_flag = SvTRUE( private_flag_SV );
@@ -228,11 +232,16 @@ void _load_key(HV* rsa_HV, SV* private_flag_SV, SV* key_string_SV)
     }
     set_RSA_key(rsa_HV, rsa);
 
-void _free_RSA_key(HV* rsa_HV)
+void
+_free_RSA_key(rsa_HV)
+    HV* rsa_HV;
   CODE:
     free_RSA_key( rsa_HV );
 
-SV* _get_key_string(HV* rsa_HV, SV* private_flag_SV)
+SV*
+_get_key_string(rsa_HV, private_flag_SV)
+    HV* rsa_HV;
+    SV* private_flag_SV;
   PREINIT:
     BUF_MEM* bptr;
     BIO* stringBIO;
@@ -269,7 +278,10 @@ SV* _get_key_string(HV* rsa_HV, SV* private_flag_SV)
  # It defaults to 65535
  #
 
-void _generate_key(HV* rsa_HV, SV* bitsSV, ...)
+void
+_generate_key(rsa_HV, bitsSV, ...)
+    HV* rsa_HV;
+    SV* bitsSV;
   PREINIT:
     RSA* rsa;
     unsigned long exponent;
@@ -290,7 +302,14 @@ void _generate_key(HV* rsa_HV, SV* bitsSV, ...)
 
     set_RSA_key(rsa_HV, rsa);
 
-SV* _new_key_from_parameters(SV* proto, BIGNUM* n, BIGNUM* e, BIGNUM* d, BIGNUM* p, BIGNUM* q)
+SV*
+_new_key_from_parameters(proto, n, e, d, p, q)
+    SV* proto;
+    BIGNUM* n;
+    BIGNUM* e;
+    BIGNUM* d;
+    BIGNUM* p;
+    BIGNUM* q;
   PREINIT:
     RSA* rsa;
     BN_CTX* ctx;
@@ -360,7 +379,9 @@ SV* _new_key_from_parameters(SV* proto, BIGNUM* n, BIGNUM* e, BIGNUM* d, BIGNUM*
   OUTPUT:
     RETVAL
 
-void _get_key_parameters(HV* rsa_HV)
+void
+_get_key_parameters(rsa_HV)
+    HV* rsa_HV;
 PPCODE:
 {
     RSA* rsa;
@@ -377,7 +398,10 @@ PPCODE:
 
 # Encrypt plain text into cipher text.  Returns the cipher text
 
-SV* encrypt(HV* rsa_HV, SV* plaintext_SV, ...)
+SV*
+encrypt(rsa_HV, plaintext_SV, ...)
+    HV* rsa_HV;
+    SV* plaintext_SV;
   PREINIT:
     int plaintext_length;
     unsigned char* plaintext;
@@ -416,7 +440,10 @@ SV* encrypt(HV* rsa_HV, SV* plaintext_SV, ...)
 
 
 # Decrypt cipher text into plain text.  Returns the plain text
-SV* decrypt(HV* rsa_HV, SV* ciphertext_SV)
+SV*
+decrypt(rsa_HV, ciphertext_SV)
+    HV* rsa_HV;
+    SV* ciphertext_SV;
   PREINIT:
     int ciphertext_length;  /* Needed to pass to SvPV */
     int plaintext_length;
@@ -457,13 +484,17 @@ SV* decrypt(HV* rsa_HV, SV* ciphertext_SV)
   OUTPUT:
     RETVAL
 
-int size(HV* rsa_HV)
+int
+size(rsa_HV)
+    HV* rsa_HV;
   CODE:
     RETVAL = RSA_size( get_RSA_key( rsa_HV ) );
   OUTPUT:
     RETVAL
 
-int check_key(HV* rsa_HV)
+int
+check_key(rsa_HV)
+    HV* rsa_HV;
   CODE:
     RETVAL = RSA_check_key( get_RSA_key( rsa_HV ) );
   OUTPUT:
@@ -472,7 +503,9 @@ int check_key(HV* rsa_HV)
  # Seed the PRNG with user-provided bytes; returns true if the
  # seeding was sufficient.
 
-int _random_seed(SV* random_bytes_SV)
+int
+_random_seed(random_bytes_SV)
+    SV* random_bytes_SV;
   PREINIT:
     int random_bytes_length;
     char* random_bytes;
@@ -485,7 +518,8 @@ int _random_seed(SV* random_bytes_SV)
 
  # Returns true if the PRNG has enough seed data
 
-int _random_status()
+int
+_random_status()
   CODE:
     RETVAL = RAND_status();
   OUTPUT:
@@ -493,35 +527,52 @@ int _random_status()
 
 # Sign text. Returns the signature.
 
-void use_md5_hash(HV* rsa_HV)
+void
+use_md5_hash(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_hash( rsa_HV, NID_md5 );
 
-void use_sha1_hash(HV* rsa_HV)
+void
+use_sha1_hash(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_hash( rsa_HV, NID_sha1 );
 
-void use_ripemd160_hash(HV* rsa_HV)
+void
+use_ripemd160_hash(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_hash( rsa_HV, NID_ripemd160 );
 
-void use_no_padding(HV* rsa_HV)
+void
+use_no_padding(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_padding(rsa_HV, RSA_NO_PADDING);
 
-void use_pkcs1_padding(HV* rsa_HV)
+void
+use_pkcs1_padding(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_padding(rsa_HV, RSA_PKCS1_PADDING);
 
-void use_pkcs1_oaep_padding(HV* rsa_HV)
+void
+use_pkcs1_oaep_padding(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_padding(rsa_HV, RSA_PKCS1_OAEP_PADDING);
 
-void use_sslv23_padding(HV* rsa_HV)
+void
+use_sslv23_padding(rsa_HV)
+    HV* rsa_HV;
   CODE:
     set_padding(rsa_HV, RSA_SSLV23_PADDING);
 
-SV* sign (HV* rsa_HV, SV* text_SV, ...)
+SV*
+sign (rsa_HV, text_SV, ...)
+    HV* rsa_HV;
+    SV* text_SV;
   PREINIT:
     unsigned char* signature;
     char* digest;
@@ -562,7 +613,11 @@ SV* sign (HV* rsa_HV, SV* text_SV, ...)
 
 # Verify signature. Returns 1 if correct, 0 otherwise.
 
-void verify (HV* rsa_HV, SV* text_SV, SV* sig_SV, ...)
+void
+verify (rsa_HV, text_SV, sig_SV, ...)
+    HV* rsa_HV;
+    SV* text_SV;
+    SV* sig_SV;
 PPCODE:
 {
     unsigned char* sig;

@@ -15,7 +15,7 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.18';
+$VERSION = '0.19';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -227,7 +227,7 @@ sub load_public_key
 
 =item load_private_key
 
-I<DEPRECATED> - use new_public_key instead
+I<DEPRECATED> - use new_private_key instead
 
 =cut
 

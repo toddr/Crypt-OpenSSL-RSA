@@ -40,6 +40,6 @@ methods should be kept around longer/permanently; feel free to send
 email to me at iroberts@cpan.org, or visit
 http://perl-openssl.sourceforge.net/.
 
-Copyright (c) 2001 Ian Robertson.  Crypt::OpenSSL::RSA is free
+Copyright (c) 2001-2003 Ian Robertson.  Crypt::OpenSSL::RSA is free
 software; you may redistribute it and/or modify it under the same
 terms as Perl itself.

@@ -1,5 +1,13 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.19  Sun Apr 27 2003 18:33:48
+        - Revert back to old declaration style so that we no longer
+          break under perl 5.005 (spotted by Rob Brown <bbb@cpan.org>).
+        - Add some needed use statements in legacy.t and rsa.t (patch
+          submitted by Rob Brown).
+        - Fix typo in docs spotted by Daniel Drown <dan@drown.org>
+        - Update copyright dates.
+
 0.18  Sun Feb 23 2003 20:44:35
         - Add two new methods, new_key_from_parameters and
           get_key_parameters, which, working with

@@ -2,6 +2,7 @@ use strict;
 use Test;
 
 use Crypt::OpenSSL::Random;
+use Crypt::OpenSSL::RSA;
 
 BEGIN { plan tests => 19 }
 
