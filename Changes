@@ -1,5 +1,9 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.21  Sun Feb 15 2004 21:13:45
+        - Include t/format.t in the MANIFEST file, so that it is
+          actually included in the distribution.
+
 0.20  Sun Feb 15 2004 15:21:40
         - Finally add support for the public key format produced by
           "openssl rsa -pubout".

@@ -8,3 +8,4 @@ typemap
 t/legacy.t
 t/rsa.t
 t/bignum.t
+t/format.t
