@@ -3,7 +3,5 @@ Makefile.PL
 MANIFEST
 RSA.pm
 RSA.xs
-rsaLib.c
-rsaLib.h
 test.pl
 README

@@ -5,9 +5,9 @@ WriteMakefile(
     'NAME'	=> 'Crypt::OpenSSL::RSA',
     'DISTNAME' => 'Crypt-OpenSSL-RSA',
     'VERSION_FROM' => 'RSA.pm', # finds $VERSION
-    'OBJECT' => 'RSA.o rsaLib.o',
-    'LIBS'	=> ['-lssl -lcrypto'],   # e.g., '-lm' 
+    'OBJECT' => 'RSA.o',
+    'LIBS'	=> ['-lssl -lcrypto'],   # e.g., '-lm'
     'PREREQ_PM' => { 'Crypt::OpenSSL::Random' => 0 },
-    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> '',     # e.g., '-I/usr/include/other' 
+    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING'
+    'INC'	=> '',     # e.g., '-I/usr/include/other'
 );

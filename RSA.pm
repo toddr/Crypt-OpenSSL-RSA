@@ -3,9 +3,9 @@ package Crypt::OpenSSL::RSA;
 use strict;
 use Carp;
 
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD
-            $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
-            $RSA_PKCS1_OAEP_PADDING );
+use vars qw( $VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD
+             $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
+             $RSA_PKCS1_OAEP_PADDING );
 
 require Exporter;
 require DynaLoader;
@@ -19,9 +19,16 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
+
+# taken from openssl/rsa.h
+
+$RSA_PKCS1_PADDING = 1;
+$RSA_SSLV23_PADDING = 2;
+$RSA_NO_PADDING = 3;
+$RSA_PKCS1_OAEP_PADDING = 4;
 
 # Preloaded methods go here.
 
@@ -29,7 +36,6 @@ bootstrap Crypt::OpenSSL::RSA $VERSION;
 
 1;
 __END__
-# Below is the stub of documentation for your module. You better edit it!
 
 =head1 NAME
 
@@ -43,29 +49,37 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
   # not necessary if we have /dev/random:
   Crypt::OpenSSL::Random::random_seed($good_entropy);
 
-  $rsa_pub = new Crypt::OpenSSL::RSA();
+  $rsa_pub = Crypt::OpenSSL::RSA->new();
   $rsa_pub->import_random_seed();
+  # or just Crypt::OpenSSL::RSA::import_random_seed
 
   $rsa_pub->load_public_key($key_string);
   $ciphertext = $rsa->encrypt($plaintext);
 
-  $rsa_priv = new Crypt::OpenSSL::RSA();
-
+  $rsa_priv = Crypt::OpenSSL::RSA->new();
   $rsa_priv->load_private_key($key_string);
   $plaintext = $rsa->encrypt($ciphertext);
 
-  $rsa = new Crypt::OpenSSL::RSA();
-
+  $rsa = Crypt::OpenSSL::RSA->new();
   $rsa->generate_key(1024); # or
   $rsa->generate_key(1024, $prime);
 
   print "private key is:\n", $rsa->get_private_key_string();
   print "public key is:\n", $rsa->get_public_key_string();
 
+  $signature = $rsa_priv->sign($plaintext);
+  print "Signed correctly\n" if ( $rsa->verify($plaintext, $signature) );
+
 =head1 DESCRIPTION
 
 Crypt::OpenSSL::RSA provides the ability to RSA encrypt strings which are
-somewhat shorter than the block size of a key.  It also allows for decryption.
+somewhat shorter than the block size of a key.  It also allows for decryption,
+signatures and signature verification.
+
+I<NOTE>: Many of the methods in this package can croak, so use eval, or
+Error.pm's try/catch mechanism to capture errors.  Also, while some
+methods from earlier versions of this package return true on success,
+this (never documented) behavior is no longer the case.
 
 =head1 Instance Methods
 
@@ -82,9 +96,9 @@ or load_private_key.
 sub new
 {
     my ($package) = @_;
-    my $self = {};
-    bless $self, $package;
-    $self->set_padding_mode($RSA_PKCS1_OAEP_PADDING);
+    my $self = bless {}, $package;
+    $self->use_pkcs1_oaep_padding();
+    $self->use_sha1_hash();
     return $self;
 }
 
@@ -119,7 +133,7 @@ sub load_public_key
 
 Load a private key in from an X509 encoded string.  The string should
 include the -----BEGIN...----- and -----END...----- lines.  The
-padding is set to PKCS1_OAEP, but can be changed with set_padding.
+padding is set to PKCS1_OAEP, but can be changed with use_xxx_padding.
 
 =cut
 
@@ -163,67 +177,132 @@ but can be changed with set_padding.
 
 Encrypt a string using the public (portion of the) key
 
+=item sign
+
+Sign a string using the secret (portion of the) key
+
+=item verify
+
+Check the signature on a text.
+
 =item decrypt
 
 Decrypt a binary "string".  Croaks if the key is public only.
 
-=cut
-
-# taken from openssl/rsa.h
-
-$RSA_PKCS1_PADDING = 1;
-$RSA_SSLV23_PADDING = 2;
-$RSA_NO_PADDING = 3;
-$RSA_PKCS1_OAEP_PADDING = 4;
-
 =item set_padding_mode
 
-Set the padding mode.  The choices are
-
-=over
-
-=item $RSA_PKCS1_PADDING
-
-PKCS #1 v1.5 padding. This currently is the most widely used mode.
-
-=item $RSA_PKCS1_OAEP_PADDING
-
-EME-OAEP as defined in PKCS #1 v2.0 with SHA-1, MGF1 and an empty
-encoding parameter. This mode is recommended for all new applications.
-
-=item $RSA_SSLV23_PADDING
-
-PKCS #1 v1.5 padding with an SSL-specific modification that denotes
-that the server is SSL3 capable.
-
-=item $RSA_NO_PADDING
-
-Raw RSA encryption. This mode should only be used to implement
-cryptographically sound padding modes in the application code.
-Encrypting user data directly with RSA is insecure.
-
-=back
-
-By default, $RSA_PKCS1_OAEP_PADDING is used.
+DEPRECATED.  Use the use_xxx_padding methods instead
 
 =cut
 
 sub set_padding_mode
 {
     my ($self, $padding_mode) = @_;
-    $self->{padding_mode} = $padding_mode;
+    $self->{_Padding_Mode} = $padding_mode;
+}
+
+=item use_no_padding
+
+Use raw RSA encryption. This mode should only be used to implement
+cryptographically sound padding modes in the application code.
+Encrypting user data directly with RSA is insecure.
+
+=cut
+
+sub use_no_padding
+{
+    shift->set_padding_mode( $RSA_NO_PADDING );
+}
+
+=item use_pkcs1_padding
+
+Use PKCS #1 v1.5 padding. This currently is the most widely used mode
+of padding.
+
+=cut
+
+sub use_pkcs1_padding
+{
+    shift->set_padding_mode( $RSA_PKCS1_PADDING );
+}
+
+=item use_pkcs1_oaep_padding
+
+Use EME-OAEP padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
+an empty encoding parameter. This mode of padding is recommended for
+all new applications.  It is the default mode used by
+Crypt::OpenSSL::RSA.
+
+=cut
+
+sub use_pkcs1_oaep_padding
+{
+    shift->set_padding_mode( $RSA_PKCS1_OAEP_PADDING );
+}
+
+=item use_sslv23_padding
+
+Use PKCS #1 v1.5 padding with an SSL-specific modification that
+denotes that the server is SSL3 capable.
+
+=cut
+
+sub use_sslv23_padding
+{
+    shift->set_padding_mode( $RSA_SSLV23_PADDING );
 }
 
 =item get_padding_mode
 
-Get the padding mode.
+DEPRECATED.
 
 =cut
 
 sub get_padding_mode
 {
-    my ($self) = @_;
-    return $self->{padding_mode};
+    return shift->{_Padding_Mode};
+}
+
+=item use_md5_hash
+
+Use the RFC 1321 MD5 hashing algorithm by Ron Rivest when signing and
+verifying messages.
+
+=cut
+
+sub use_md5_hash
+{
+    shift->_set_hash_mode( 1 );
+}
+
+=item use_sha1_hash
+
+Use the RFC 3174 Secure Hashing Algorithm (FIPS 180-1) when signing
+and verifying messages. This is the default.
+
+=cut
+
+sub use_sha1_hash
+{
+    shift->_set_hash_mode( 2 );
+}
+
+=item use_ripemd160_hash
+
+Dobbertin, Bosselaers and Preneel's RIPEMD hashing algorithm when
+signing and verifying messages.
+
+=cut
+
+sub use_ripemd160_hash
+{
+    shift->_set_hash_mode( 3 );
+}
+
+sub _set_hash_mode
+{
+    my ($self, $hash) = @_;
+    $self->{_Hash_Mode} = $hash;
 }
 
 =item size
@@ -255,6 +334,10 @@ This function validates the RSA key, returning 1 if the key is valid,
 
 =back
 
+=head1 Class Methods
+
+=over
+
 =item import_random_seed
 
 Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
@@ -275,21 +358,11 @@ sub import_random_seed
 
 =head1 BUGS
 
-Currently many XS routines croak rather than trying to intelligently
-signal an error.  This is mostly in cases where a routine is called
-without adequate preparation, such as asking to encrypt before setting
-a key.
-
-There appears to be some small memory leaks in functions (notably
-_load_key, probably others).  This is presumably due to failure to
-decrement a reference count somewhere - I just haven't found out where
-yet.
-
-RSA_NO_PADDING_MODE does not work - I don't know yet if it's a problem with encryption, decryption, or both.
+There is a small memory leak when generating new keys of more than 512 bits.
 
 =head1 AUTHOR
 
-Ian Robertson, iroberts@cpan.com
+Ian Robertson, iroberts@cpan.org
 
 =head1 SEE ALSO
 
