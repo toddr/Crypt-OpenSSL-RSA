@@ -28,9 +28,6 @@ Bugs:
        The openssl functions RSA_public_decrypt, RSA_private_decrypt,
        RSA_sign and RSA_verify are not yet implemented.
 
-       Arguably, this module should be greatly extended and renamed
-       Crypt::OpenSSL::OpenSSL
-
        There is no support for encrypting text larger than the key-size.
 
        There is no Crypt::CBC support.

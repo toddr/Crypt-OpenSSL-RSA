@@ -19,7 +19,7 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -55,20 +55,12 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
   $rsa->generate_key(1024, $prime);
 
   print "private key is:\n", $rsa->get_private_key_string();
-  print "public key is:\n", $rsa->get_public_string();
+  print "public key is:\n", $rsa->get_public_key_string();
 
 =head1 DESCRIPTION
 
 Crypt::OpenSSL::RSA provides the ability to RSA encrypt strings which are
 somewhat shorter than the block size of a key.  It also allows for decryption.
-
-=head1 AUTHOR
-
-Ian Robertson, ian@eziba.com
-
-=head1 SEE ALSO
-
-perl(1).
 
 =head1 Instance Methods
 
@@ -260,18 +252,6 @@ This function validates the RSA key, returning 1 if the key is valid,
 
 =back
 
-=head1 Static Methods
-
-=item random_seed
-
-This function seeds the PRNG with a supplied string of bytes.  It
-returns true if the PRNG has sufficient seeding.  Note: calling this
-function with non-random bytes is of limited value at best!
-
-=item random_status
-
-This function returns true if the PRNG has sufficient seeding.
-
 =head1 BUGS
 
 Currently many XS routines croak rather than trying to intelligently
@@ -286,9 +266,12 @@ yet.
 
 RSA_NO_PADDING_MODE does not work - I don't know yet if it's a problem with encryption, decryption, or both.
 
+=head1 AUTHOR
+
+Ian Robertson, ian@cpan.com
+
 =head1 SEE ALSO
 
-rsa(3)), RAND_add(3), RSA_new(3), RSA_public_encrypt(3), RSA_size(3),
-RSA_generate_key(3), RSA_check_key(3), RSA_print(3)
-
+perl(1), rsa(3), RSA_new(3), RSA_public_encrypt(3),
+RSA_size(3), RSA_generate_key(3), RSA_check_key(3)
 =cut

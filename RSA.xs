@@ -265,7 +265,7 @@ encrypt(rsa_HV_ref, plaintext_SV, ...)
      SV *plaintext_SV;
 PPCODE:
 {
-    int plaintext_length;  /* Needed to pass to SvPV */
+    int plaintext_length;
     unsigned char *plaintext, *ciphertext;
     size_t size;
     int ciphertext_length;
@@ -284,7 +284,11 @@ PPCODE:
         croak("There is no key to encrypt with");
 
     size = RSA_size(rsa);
-    ciphertext = malloc(size);
+    if(New(0,ciphertext, size, char) == NULL)
+    {
+        croak ("unable to allocate buffer for ciphertext in package "
+            PACKAGE_NAME);
+    }
 
     padding_mode = get_padding_mode(rsa_HV);
 
@@ -294,12 +298,12 @@ PPCODE:
 
     if (ciphertext_length < 0)
     {
-        free(ciphertext);
+        Safefree(ciphertext);
         XSRETURN_NO;
     }
 
     XPUSHs(sv_2mortal(newSVpv(ciphertext, size)));
-    free(ciphertext);
+    Safefree(ciphertext);
     XSRETURN(1);
 }
 
@@ -310,7 +314,8 @@ decrypt(rsa_HV_ref, ciphertext_SV)
      SV * ciphertext_SV;
 PPCODE:
 {
-    int ciphertext_length, plaintext_length;  /* Needed to pass to SvPV */
+    int ciphertext_length;  /* Needed to pass to SvPV */
+    int plaintext_length;
     char *plaintext, *ciphertext;
     unsigned long size;
     RSA *rsa;
@@ -335,20 +340,24 @@ PPCODE:
         XSRETURN_NO;
     }
     size = RSA_size(rsa);
-    plaintext = malloc(size);
+    if(New(0,plaintext, size, char) == NULL)
+    {
+        croak ("unable to allocate buffer for plaintext in package "
+            PACKAGE_NAME);
+    }
 
     padding_mode = get_padding_mode(rsa_HV);
 
     plaintext_length = RSA_private_decrypt(size, ciphertext, plaintext, rsa,
-                                         padding_mode);
+                                           padding_mode);
     if (plaintext_length < 0)
     {
-        free(plaintext);
+        Safefree(plaintext);
         XSRETURN_NO;
     }
 
     XPUSHs(sv_2mortal(newSVpv(plaintext, plaintext_length)));
-    free(plaintext);
+    Safefree(plaintext);
     XSRETURN(1);
 }
 
@@ -387,29 +396,3 @@ PPCODE:
     XPUSHs( sv_2mortal( newSViv( RSA_check_key(rsa) )));
     XSRETURN(1);
 }
-
- # Seed the PRNG with user-provided bytes; returns true if the 
- # seeding was sufficient.
-
-void
-random_seed(random_bytes_SV)
-    SV * random_bytes_SV;
-PPCODE:
-{
-    int random_bytes_length;
-    char *random_bytes;
-    random_bytes = SvPV(random_bytes_SV, random_bytes_length);
-    RAND_seed(random_bytes, random_bytes_length);
-    XPUSHs( sv_2mortal( newSViv( RAND_status() ) ) );
-}
-
- # Seed the PRNG with user-provided bytes; returns true if the 
- # seeding was sufficient.
-
-void
-random_status()
-PPCODE:
-{
-    XPUSHs( sv_2mortal( newSViv( RAND_status() ) ) );
-}
-

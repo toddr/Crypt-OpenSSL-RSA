@@ -20,16 +20,19 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+my $test_number = 2;
 sub my_test
 {
-    my($cond, $number) = @_;
+    my($cond) = @_;
+    my $number = $test_number++;
     if ($cond)
     {
         print "ok $number\n";
     }
     else
     {
-        print "not ok $number\n";
+        my ($pack, $file, $line) = caller;
+        print "not ok $number - from $file:$line\n";
     }
 }    
 
@@ -41,13 +44,13 @@ sub my_test
 Crypt::OpenSSL::RSA::random_seed("Here are 19 bytes...");
 
 # We should now be seeded, regardless.
-my_test(Crypt::OpenSSL::RSA::random_status(), 2);
+my_test(Crypt::OpenSSL::Random::random_status());
 
 my $rsa = Crypt::OpenSSL::RSA->new();
 
-my_test($rsa->generate_key(1024), 3);
-my_test($rsa->size() * 8 == 1024, 4);
-my_test($rsa->check_key(), 5);
+my_test($rsa->generate_key(1024));
+my_test($rsa->size() * 8 == 1024);
+my_test($rsa->check_key());
 
 my $plaintext_length = $rsa->size() - 42;
 my $plaintext = pack("C$plaintext_length", 
@@ -58,15 +61,15 @@ my $plaintext = pack("C$plaintext_length",
 $rsa->set_padding_mode($RSA_PKCS1_OAEP_PADDING);
 
 my ($ciphertext, $decoded_text);
-my_test($ciphertext = $rsa->encrypt($plaintext), 6);
-my_test($decoded_text = $rsa->decrypt($ciphertext), 7);
+my_test($ciphertext = $rsa->encrypt($plaintext));
+my_test($decoded_text = $rsa->decrypt($ciphertext));
 
-my_test ($decoded_text eq $plaintext, 8);
+my_test ($decoded_text eq $plaintext);
 
 my $private_key_string = $rsa->get_private_key_string();
 my $public_key_string = $rsa->get_public_key_string();
 
-my_test ($private_key_string and $public_key_string, 9);
+my_test ($private_key_string and $public_key_string);
 
 # print "$public_key_string\n";
 # print "$private_key_string\n";
@@ -76,13 +79,13 @@ my $rsa_priv = new Crypt::OpenSSL::RSA();
 $rsa_priv->load_private_key($private_key_string);
 $decoded_text = $rsa_priv->decrypt($ciphertext);
 
-my_test ($decoded_text eq $plaintext, 10);
+my_test ($decoded_text eq $plaintext);
 
 my $rsa_pub = new Crypt::OpenSSL::RSA();
 
-my_test($rsa_pub->load_public_key($public_key_string), 11);
+my_test($rsa_pub->load_public_key($public_key_string));
 
 $ciphertext = $rsa_pub->encrypt($plaintext);
 $decoded_text = $rsa->decrypt($ciphertext);
 
-my_test ($decoded_text eq $plaintext, 12);
+my_test ($decoded_text eq $plaintext);
