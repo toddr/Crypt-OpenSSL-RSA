@@ -8,6 +8,6 @@ WriteMakefile(
     'OBJECT' => 'RSA.o',
     'LIBS'	=> ['-lssl -lcrypto'],   # e.g., '-lm'
     'PREREQ_PM' => { 'Crypt::OpenSSL::Random' => 0 },
-    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING'
+    'DEFINE'	=> '-DPERL5',   # perl-5.8/gcc-3.2 needs this
     'INC'	=> '',     # e.g., '-I/usr/include/other'
 );

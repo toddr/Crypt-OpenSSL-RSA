@@ -200,6 +200,7 @@ char* get_message_digest( SV *text_SV, int hash_method )
 
 
 MODULE = Crypt::OpenSSL::RSA		PACKAGE = Crypt::OpenSSL::RSA
+PROTOTYPES: DISABLE
 
 BOOT:
     ERR_load_crypto_strings();
@@ -296,7 +297,7 @@ PPCODE:
  #
 
 void
-generate_key(rsa_HV_ref, bitsSV, ...)
+_generate_key(rsa_HV_ref, bitsSV, ...)
      SV *rsa_HV_ref;
      SV *bitsSV;
 PPCODE:

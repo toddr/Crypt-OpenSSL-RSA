@@ -3,5 +3,6 @@ Makefile.PL
 MANIFEST
 RSA.pm
 RSA.xs
-test.pl
 README
+t/legacy.t
+t/rsa.t

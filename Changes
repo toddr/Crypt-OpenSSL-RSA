@@ -1,5 +1,17 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.17  Mon Jan 06 2003 22:43:31
+        - Workaround for gcc 3.2 compile problems:
+          "/usr/include/openssl/des.h:193: parse error before '&' token"
+          (Patch by Rob Brown <bbb@cpan.org>)
+        - Deprecate no-arg constructor, load_*_key methods and the
+          instance method generate_key; switch to three constructors:
+          new_public_key, new_private_key and generate_key (as a class
+          method)
+        - Deprecate set_padding_mode method; replace with
+          use_xxx_padding.
+        - move tests into t directory, use Test as a framework
+
 0.16  Tue Jun 11 22:01:45
         - Fix bug reported by Rob McMillin <rlm@pricegrabber.com> which
           prevented subclassing.

@@ -12,14 +12,10 @@ require DynaLoader;
 require AutoLoader;
 
 @ISA = qw(Exporter DynaLoader);
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.16';
+$VERSION = '0.17';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -35,6 +31,7 @@ $RSA_PKCS1_OAEP_PADDING = 4;
 # Autoload methods go after =cut, and are processed by the autosplit program.
 
 1;
+
 __END__
 
 =head1 NAME
@@ -48,25 +45,21 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
 
   # not necessary if we have /dev/random:
   Crypt::OpenSSL::Random::random_seed($good_entropy);
-
-  $rsa_pub = Crypt::OpenSSL::RSA->new();
-  $rsa_pub->import_random_seed();
-  # or just Crypt::OpenSSL::RSA::import_random_seed
-
-  $rsa_pub->load_public_key($key_string);
+  Crypt::OpenSSL::RSA->import_random_seed();
+  $rsa_pub = Crypt::OpenSSL::RSA->new_public_key($key_string);
+  $rsa_pub->use_sslv23_padding(); # use_pkcs1_oaep_padding is the default
   $ciphertext = $rsa->encrypt($plaintext);
 
-  $rsa_priv = Crypt::OpenSSL::RSA->new();
-  $rsa_priv->load_private_key($key_string);
+  $rsa_priv = Crypt::OpenSSL::RSA->new_private_key($key_string);
   $plaintext = $rsa->encrypt($ciphertext);
 
-  $rsa = Crypt::OpenSSL::RSA->new();
-  $rsa->generate_key(1024); # or
-  $rsa->generate_key(1024, $prime);
+  $rsa = Crypt::OpenSSL::RSA->generate_key( 1024 ); # or
+  $rsa = Crypt::OpenSSL::RSA->generate_key( 1024, $prime );
 
   print "private key is:\n", $rsa->get_private_key_string();
   print "public key is:\n", $rsa->get_public_key_string();
 
+  $rsa_priv->use_md5_hash(); # use_sha1_hash is the default
   $signature = $rsa_priv->sign($plaintext);
   print "Signed correctly\n" if ( $rsa->verify($plaintext, $signature) );
 
@@ -81,26 +74,113 @@ Error.pm's try/catch mechanism to capture errors.  Also, while some
 methods from earlier versions of this package return true on success,
 this (never documented) behavior is no longer the case.
 
-=head1 Instance Methods
+=head1 Class Methods
 
 =over
 
+=item new_public_key
+
+Create a new Crypt::OpenSSL::RSA object by loading a public key in
+from an X509 encoded string.  The string should include the
+-----BEGIN...----- and -----END...----- lines.  The padding is set to
+PKCS1_OAEP, but can be changed with the use_xxx_padding methods
+
+=cut
+
+sub new_public_key
+{
+    my $self = shift->_new();
+    $self->load_public_key( @_ );
+    return $self;
+}
+
+=item new_private_key
+
+Create a new Crypt::OpenSSL::RSA object by loading a private key in
+from an X509 encoded string.  The string should include the
+-----BEGIN...----- and -----END...----- lines.  The padding is set to
+PKCS1_OAEP, but can be changed with use_xxx_padding.
+
+=cut
+
+sub new_private_key
+{
+    my $self = shift->_new();
+    $self->load_private_key( @_ );
+    return $self;
+}
+
+=item generate_key
+
+Create a new Crypt::OpenSSL::RSA object by constructing a
+private/public key pair.  The first (mandetory) argument is the key
+size, while the second optional argument specifies the public exponent
+(the default public exponent is 65535).  The padding is set to
+PKCS1_OAEP, but can be changed with use_xxx_padding methods.
+
+I<NOTE> - using generate_key as an instance method on an rsa object
+  created by the deprecated new method is itself deprecated.
+
+=cut
+
+sub generate_key
+{
+    if( ref $_[0] )
+    {
+        warn "use of generate_key as an instance method instead of as a constructor has been deprecated.";
+        my $self = shift;
+        $self->_generate_key( @_ );
+    }
+    else
+    {
+        my $self = shift->_new();
+        $self->_generate_key( @_ );
+        return $self;
+    }
+}
+
+=item import_random_seed
+
+Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
+libraries won't allow sharing of random structures across perl XS
+modules.
+
+=cut
+
+sub import_random_seed
+{
+    until ( _random_status() )
+    {
+        _random_seed( Crypt::OpenSSL::Random::random_bytes(20) );
+    }
+}
+
 =item new
 
-The standard constructor for an RSA object takes no arguments; the key
-should either be created by generate_key, or loaded in by load_public_key
-or load_private_key.
+The no-arg new constructor is I<DEPRECATED> - use generate_key,
+new_public_key or new_private_key instead.
 
 =cut
 
 sub new
 {
-    my ($package) = @_;
-    my $self = bless {}, $package;
+    warn "Crypt::OpenSSL::RSA::new is deprecated";
+    return shift->_new();
+}
+
+sub _new
+{
+    my $self = bless {}, shift;
     $self->use_pkcs1_oaep_padding();
     $self->use_sha1_hash();
     return $self;
 }
+
+=back
+
+=head1 Instance Methods
+
+=over
 
 =item DESTROY
 
@@ -111,15 +191,12 @@ occupied by the RSA key structure.
 
 sub DESTROY
 {
-    my ($self) = @_;
-    $self->_free_RSA_key();
+    shift->_free_RSA_key();
 }
 
 =item load_public_key
 
-Load a public key in from an X509 encoded string.  The string should
-include the -----BEGIN...----- and -----END...----- lines.  The
-padding is set to PKCS1_OAEP, but can be changed with set_padding.
+I<DEPRECATED> - use new_public_key instead
 
 =cut
 
@@ -131,9 +208,7 @@ sub load_public_key
 
 =item load_private_key
 
-Load a private key in from an X509 encoded string.  The string should
-include the -----BEGIN...----- and -----END...----- lines.  The
-padding is set to PKCS1_OAEP, but can be changed with use_xxx_padding.
+I<DEPRECATED> - use new_public_key instead
 
 =cut
 
@@ -168,11 +243,6 @@ sub get_private_key_string
 }
 
 
-=item generate_key
-
-Generate a private/public key pair.  The padding is set to PKCS1_OAEP,
-but can be changed with set_padding.
-
 =item encrypt
 
 Encrypt a string using the public (portion of the) key
@@ -191,14 +261,20 @@ Decrypt a binary "string".  Croaks if the key is public only.
 
 =item set_padding_mode
 
-DEPRECATED.  Use the use_xxx_padding methods instead
+I<DEPRECATED>  Use the use_xxx_padding methods instead
 
 =cut
 
 sub set_padding_mode
 {
-    my ($self, $padding_mode) = @_;
-    $self->{_Padding_Mode} = $padding_mode;
+    my $self = shift;
+    warn "set_padding_mode is deprecated.  Use use_xxx_padding instead";
+    shift->_set_padding_mode( @_ ) ;
+}
+
+sub _set_padding_mode
+{
+    $_[0]->{_Padding_Mode} = $_[1];
 }
 
 =item use_no_padding
@@ -211,7 +287,7 @@ Encrypting user data directly with RSA is insecure.
 
 sub use_no_padding
 {
-    shift->set_padding_mode( $RSA_NO_PADDING );
+    shift->_set_padding_mode( $RSA_NO_PADDING );
 }
 
 =item use_pkcs1_padding
@@ -223,7 +299,7 @@ of padding.
 
 sub use_pkcs1_padding
 {
-    shift->set_padding_mode( $RSA_PKCS1_PADDING );
+    shift->_set_padding_mode( $RSA_PKCS1_PADDING );
 }
 
 =item use_pkcs1_oaep_padding
@@ -237,7 +313,7 @@ Crypt::OpenSSL::RSA.
 
 sub use_pkcs1_oaep_padding
 {
-    shift->set_padding_mode( $RSA_PKCS1_OAEP_PADDING );
+    shift->_set_padding_mode( $RSA_PKCS1_OAEP_PADDING );
 }
 
 =item use_sslv23_padding
@@ -249,17 +325,18 @@ denotes that the server is SSL3 capable.
 
 sub use_sslv23_padding
 {
-    shift->set_padding_mode( $RSA_SSLV23_PADDING );
+    shift->_set_padding_mode( $RSA_SSLV23_PADDING );
 }
 
 =item get_padding_mode
 
-DEPRECATED.
+I<DEPRECATED>
 
 =cut
 
 sub get_padding_mode
 {
+    warn "get_padding_mode is depreceated";
     return shift->{_Padding_Mode};
 }
 
@@ -301,27 +378,26 @@ sub use_ripemd160_hash
 
 sub _set_hash_mode
 {
-    my ($self, $hash) = @_;
-    $self->{_Hash_Mode} = $hash;
+    $_[0]->{_Hash_Mode} = $_[1];
 }
 
 =item size
 
 Returns the size, in bytes, of the key.  All encrypted text will be of
 this size, and depending on the padding mode used, the length of
-the text to be encrypted should be
+the text to be encrypted should be:
 
 =over
 
-=item $RSA_PKCS1_OAEP_PADDING
+=item pkcs1_oaep_padding
 
 at most 42 bytes less than this size.
 
-=item $RSA_PKCS1_PADDING or $RSA_SSLV23_PADDING
+=item pkcs1_padding or sslv23_padding
 
 at most 11 bytes less than this size.
 
-=item $RSA_NO_PADDING
+=item no_padding
 
 exactly this size.
 
@@ -329,32 +405,10 @@ exactly this size.
 
 =item check_key
 
-This function validates the RSA key, returning 1 if the key is valid,
-0 otherwise.
+This function validates the RSA key, returning a true value if the key
+is valid, and a false value otherwise.
 
 =back
-
-=head1 Class Methods
-
-=over
-
-=item import_random_seed
-
-Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
-libraries won't allow sharing of random structures across perl XS
-modules.
-
-=back
-
-=cut
-
-sub import_random_seed
-{
-    until ( _random_status() )
-    {
-        _random_seed( Crypt::OpenSSL::Random::random_bytes(20) );
-    }
-}
 
 =head1 BUGS
 

@@ -2,15 +2,15 @@ Crypt::OpenSSL::RSA is an XS perl module designed to provide basic RSA
 functionality.  It does this by providing a glue to the RSA functions
 in the openSSL library.  In particular, it provides the following functions:
 
-       loadPublicKey, loadPrivateKey - load a key from a string
-       getPublicKeyString, getPrivateKeyString - save a key to a string
-       generateKey - make a new key
-       encypt, decrypt, sign, verify,
+       new_public_key, new_private_key - create a key from a string
+       generate_key - make a new key
+       get_public_key_string, get_private_key_string - save a key to a string
+       encrypt, decrypt, sign, verify,
        use_pkcs1_oaep_padding, use_pkcs1_padding,
        use_sslv23_padding, use_no_padding
        use_md5_hash, use_sha1_hash, use_ripemd160_hash
-       size -  Returns the size, in bytes, of the key.
-       checkKey - checks the validity of a key.
+       size - Returns the size, in bytes, of the key.
+       check_key - checks the validity of a key.
 
 Bugs:
   There is a small memory leak when generating new keys of more than 512 bits.
@@ -21,3 +21,20 @@ Bugs:
   There is no support for encrypting text larger than the key-size.
 
   There is no Crypt::CBC support.
+
+NOTE: as of version 0.17, the following methods are DEPRECATED:
+  - the no-arg new constructor - use new_from_public_key,
+    new_from_private_key or Crypt::OpenSSL::RSA->generate_key instead
+  - load_public_key - use new_from_public_key
+  - load_private_key - use new_from_private_key
+  - generate_key as an instance method - use it as a class constructor
+    method instead.
+  - set_padding_mode - use use_no_padding, use_pkcs1_padding,
+    use_pkcs1_oaep_padding, or use_sslv23_padding instead.
+  - get_padding_mode
+
+While I plan a grace period of several months at least before removing
+these methods, they will go away, so you should start migrating your
+code now.  Of course, I am open to arguments why some or all of these
+methods should be kept around longer/permanently; feel free to send email to
+me at iroberts@cpan.org.
