@@ -16,6 +16,8 @@ print "ok 1\n";
 
 ######################### End of black magic.
 
+use Crypt::OpenSSL::Random;
+
 # Insert your test code below (better if it prints "ok 13"
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
@@ -41,7 +43,7 @@ sub my_test
 # purposes, it suffices to seed with any old thing, even if it is
 # not actually random
 
-Crypt::OpenSSL::RSA::random_seed("Here are 19 bytes...");
+Crypt::OpenSSL::Random::random_seed("Here are 19 bytes...");
 
 # We should now be seeded, regardless.
 my_test(Crypt::OpenSSL::Random::random_status());

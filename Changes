@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.11  Tue Apr 10 22:45:31
+	- Fixing bug in test.pl.
+
 0.10  Mon Apr 09 18:25:41
         - Moving random rountines into Crypt::OpenSSL::Random
         - Use New instead of malloc
