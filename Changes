@@ -1,5 +1,10 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.15  Fri Jun 07 09:13:12
+        - Fix two bugs reported by Gordon Lack <gml4410@ggr.co.uk>: use
+          IV, not I32, for pointers, and cast the right-hand, not
+          left-hand, value when doing an assignment from an SV to an HV
+
 0.14  Sun May 19 12:35:21
         - Fix bug reported by Charles Jardine <cj10@cam.ac.uk>: use
           Safefree, not free, to release memory allocated by New

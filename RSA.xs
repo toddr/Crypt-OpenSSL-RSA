@@ -66,7 +66,7 @@ RSA* get_RSA_key(HV *rsa_HV)
 
 void set_RSA_key(HV *rsa_HV, RSA *rsa)
 {
-    hvStore( rsa_HV, KEY_KEY, sv_2mortal( newSViv( (I32)rsa ) ) );
+    hvStore( rsa_HV, KEY_KEY, sv_2mortal( newSViv( (IV)rsa ) ) );
 }
 
 int get_padding_mode(HV *rsa_HV)
@@ -98,7 +98,6 @@ void set_private_flag(HV *rsa_HV, char private_flag)
     hvStore( rsa_HV, PRIVATE_FLAG_KEY, sv_2mortal( newSViv( private_flag ) ) );
 }
 
-
 HV* get_HV_from_SV_ref(SV *hv_ref)
 {
     HV *hv;
@@ -106,7 +105,7 @@ HV* get_HV_from_SV_ref(SV *hv_ref)
     {
         croak( "scalar is not a " PACKAGE_NAME " object" );
     }
-    if (SvTYPE((SV *)hv = SvRV(hv_ref)) != SVt_PVHV)
+    if ( SvTYPE( hv = (HV *) SvRV(hv_ref) ) != SVt_PVHV )
     {
         croak( "Passed scalar is not a hash reference" );
     }
