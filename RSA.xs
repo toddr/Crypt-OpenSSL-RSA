@@ -171,6 +171,7 @@ char* get_message_digest( SV *text_SV, int hash_method )
             }
             break;
         }
+
         case HASH_SHA1:
         {
             if( SHA1( text, text_length, message_digest ) == NULL )
@@ -500,7 +501,7 @@ PPCODE:
     hash = get_hash( rsa_HV );
     digest = get_message_digest( text_SV, hash );
     if ( ! RSA_sign( get_hash_type( hash ),
-                     digest, // get_message_digest( text_SV, hash ),
+                     digest,
                      get_digest_length( hash ),
                      signature,
                      &signature_length,
@@ -509,7 +510,7 @@ PPCODE:
         croak( "OpenSSL error: %s",
                ERR_reason_error_string( ERR_get_error() ) );
     }
-    free(digest);
+    Safefree(digest);
     XPUSHs( sv_2mortal( newSVpvn( signature, signature_length ) ) );
     Safefree( signature );
     XSRETURN(1);
@@ -554,7 +555,7 @@ PPCODE:
                          sig,
                          sig_length,
                          rsa );
-    free( digest );
+    Safefree( digest );
     switch( result )
     {
         case 0:

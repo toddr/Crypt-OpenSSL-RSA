@@ -1,5 +1,9 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.14  Sun May 19 12:35:21
+        - Fix bug reported by Charles Jardine <cj10@cam.ac.uk>: use
+          Safefree, not free, to release memory allocated by New
+
 0.13  Thu Mar 21 00:10:30
 	- Incorporating patch from Matthias Bauer
 	  <bauerm@immd1.informatik.uni-erlangen.de>, which provides
