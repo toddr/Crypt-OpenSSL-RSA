@@ -1,5 +1,9 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.16  Tue Jun 11 22:01:45
+        - Fix bug reported by Rob McMillin <rlm@pricegrabber.com> which
+          prevented subclassing.
+
 0.15  Fri Jun 07 09:13:12
         - Fix two bugs reported by Gordon Lack <gml4410@ggr.co.uk>: use
           IV, not I32, for pointers, and cast the right-hand, not

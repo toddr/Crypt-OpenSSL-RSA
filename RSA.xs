@@ -101,7 +101,7 @@ void set_private_flag(HV *rsa_HV, char private_flag)
 HV* get_HV_from_SV_ref(SV *hv_ref)
 {
     HV *hv;
-    if (! ( SvROK( hv_ref ) && sv_isa( hv_ref, PACKAGE_NAME ) ) )
+    if (! ( SvROK( hv_ref ) && sv_derived_from( hv_ref, PACKAGE_NAME ) ) )
     {
         croak( "scalar is not a " PACKAGE_NAME " object" );
     }

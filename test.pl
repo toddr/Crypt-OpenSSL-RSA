@@ -8,7 +8,7 @@
 
 use strict;
 my $loaded;
-BEGIN { $| = 1; print "1..19\n"; }
+BEGIN { $| = 1; print "1..21\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Crypt::OpenSSL::RSA;
 $loaded = 1;
@@ -123,3 +123,16 @@ _Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
 $rsa->use_ripemd160_hash();
 $rsa_pub->use_ripemd160_hash();
 _Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
+
+# check subclassing
+
+eval { Crypt::OpenSSL::RSA::Subpackage->new()->generate_key(256); };
+my_test( !$@ );
+
+eval { Crypt::OpenSSL::RSA::generate_key( {}, 256 ); };
+my_test( $@ );
+
+
+package Crypt::OpenSSL::RSA::Subpackage;
+
+use base qw( Crypt::OpenSSL::RSA );
