@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.09  Mon Apr 02 12:27:10
+        - Typo fix, and always exercise test random_seed in testing.
+
 0.08  Sun Apr 01 23:04:31
         - Changing method names to match convention
 

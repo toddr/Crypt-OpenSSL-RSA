@@ -19,7 +19,7 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 

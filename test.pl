@@ -33,15 +33,14 @@ sub my_test
     }
 }    
 
-unless (Crypt::OpenSSL::RSA::random_status())
-{
-    # In real life, this would stink, but for testing purposes, it
-    # suffices to seed with any old thing, even if it is not actually
-    # random
+# On platforms without a /dev/random, we need to manually seed.
+# In real life, the following would stink, but for testing
+# purposes, it suffices to seed with any old thing, even if it is
+# not actually random
 
-    Crypt::OpenSSL::RSA::randomSeed("Here are 19 bytes...");
-}
+Crypt::OpenSSL::RSA::random_seed("Here are 19 bytes...");
 
+# We should now be seeded, regardless.
 my_test(Crypt::OpenSSL::RSA::random_status(), 2);
 
 my $rsa = Crypt::OpenSSL::RSA->new();
