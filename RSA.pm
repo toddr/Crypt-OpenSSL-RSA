@@ -15,7 +15,7 @@ require AutoLoader;
 @EXPORT = qw( $RSA_PKCS1_PADDING $RSA_SSLV23_PADDING $RSA_NO_PADDING
               $RSA_PKCS1_OAEP_PADDING );
 
-$VERSION = '0.17';
+$VERSION = '0.18';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -26,9 +26,7 @@ $RSA_SSLV23_PADDING = 2;
 $RSA_NO_PADDING = 3;
 $RSA_PKCS1_OAEP_PADDING = 4;
 
-# Preloaded methods go here.
-
-# Autoload methods go after =cut, and are processed by the autosplit program.
+BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
 
 1;
 
@@ -139,6 +137,25 @@ sub generate_key
     }
 }
 
+=item new_key_from_parameters
+
+Given Crypt::OpenSSL::Bignum objects for n, e, and optionally d, p,
+and q, where p and q are the prime factors of n, e is the public
+exponent and d is the private exponent, create a new
+Crypt::OpenSSL::RSA object using these values.  If p and q are
+provided and d is undef, d is computed.  Note that while p and q are
+not necessary for a private key, their presence will speed up
+computation.
+
+=cut
+
+sub new_key_from_parameters
+{
+    my( $proto, $n, $e, $d, $p, $q ) = @_;
+    return $proto->_new_key_from_parameters
+        ( map { $_ ? $_->pointer_copy() : 0 } $n, $e, $d, $p, $q );
+}
+
 =item import_random_seed
 
 Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
@@ -167,6 +184,8 @@ sub new
     warn "Crypt::OpenSSL::RSA::new is deprecated";
     return shift->_new();
 }
+
+#deprecated
 
 sub _new
 {
@@ -283,24 +302,10 @@ Use raw RSA encryption. This mode should only be used to implement
 cryptographically sound padding modes in the application code.
 Encrypting user data directly with RSA is insecure.
 
-=cut
-
-sub use_no_padding
-{
-    shift->_set_padding_mode( $RSA_NO_PADDING );
-}
-
 =item use_pkcs1_padding
 
 Use PKCS #1 v1.5 padding. This currently is the most widely used mode
 of padding.
-
-=cut
-
-sub use_pkcs1_padding
-{
-    shift->_set_padding_mode( $RSA_PKCS1_PADDING );
-}
 
 =item use_pkcs1_oaep_padding
 
@@ -308,13 +313,6 @@ Use EME-OAEP padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
 an empty encoding parameter. This mode of padding is recommended for
 all new applications.  It is the default mode used by
 Crypt::OpenSSL::RSA.
-
-=cut
-
-sub use_pkcs1_oaep_padding
-{
-    shift->_set_padding_mode( $RSA_PKCS1_OAEP_PADDING );
-}
 
 =item use_sslv23_padding
 
@@ -345,41 +343,15 @@ sub get_padding_mode
 Use the RFC 1321 MD5 hashing algorithm by Ron Rivest when signing and
 verifying messages.
 
-=cut
-
-sub use_md5_hash
-{
-    shift->_set_hash_mode( 1 );
-}
-
 =item use_sha1_hash
 
 Use the RFC 3174 Secure Hashing Algorithm (FIPS 180-1) when signing
 and verifying messages. This is the default.
 
-=cut
-
-sub use_sha1_hash
-{
-    shift->_set_hash_mode( 2 );
-}
-
 =item use_ripemd160_hash
 
 Dobbertin, Bosselaers and Preneel's RIPEMD hashing algorithm when
 signing and verifying messages.
-
-=cut
-
-sub use_ripemd160_hash
-{
-    shift->_set_hash_mode( 3 );
-}
-
-sub _set_hash_mode
-{
-    $_[0]->{_Hash_Mode} = $_[1];
-}
 
 =item size
 
@@ -408,6 +380,23 @@ exactly this size.
 This function validates the RSA key, returning a true value if the key
 is valid, and a false value otherwise.
 
+=item get_key_parameters
+
+Return Crypt::OpenSSL::Bignum objects representing the values of n, e,
+d, p, q, d mod (p-1), d mod (q-1), and 1/q mod p, where p and q are
+the prime factors of n, e is the public exponent and d is the private
+exponent.  Some of these values may return as undef; only n and e will
+be defined for a public key.  The Crypt::OpenSSL::Bignum module must
+be installed for this to work.
+
+=cut
+
+sub get_key_parameters
+{
+    return map { $_ ? Crypt::OpenSSL::Bignum->bless_pointer($_) : undef }
+        shift->_get_key_parameters();
+}
+
 =back
 
 =head1 BUGS
@@ -420,8 +409,8 @@ Ian Robertson, iroberts@cpan.org
 
 =head1 SEE ALSO
 
-perl(1), Crypt::OpenSSL::Random(3), rsa(3), RSA_new(3),
-RSA_public_encrypt(3), RSA_size(3), RSA_generate_key(3),
-RSA_check_key(3)
+L<perl(1)>, L<Crypt::OpenSSL::Random(3)>, L<Crypt::OpenSSL::Bignum(3)>,
+L<rsa(3)>, L<RSA_new(3)>, L<RSA_public_encrypt(3)>, L<RSA_size(3)>,
+L<RSA_generate_key(3)>, L<RSA_check_key(3)>
 
 =cut

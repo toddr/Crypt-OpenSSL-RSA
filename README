@@ -36,5 +36,10 @@ NOTE: as of version 0.17, the following methods are DEPRECATED:
 While I plan a grace period of several months at least before removing
 these methods, they will go away, so you should start migrating your
 code now.  Of course, I am open to arguments why some or all of these
-methods should be kept around longer/permanently; feel free to send email to
-me at iroberts@cpan.org.
+methods should be kept around longer/permanently; feel free to send
+email to me at iroberts@cpan.org, or visit
+http://perl-openssl.sourceforge.net/.
+
+Copyright (c) 2001 Ian Robertson.  Crypt::OpenSSL::RSA is free
+software; you may redistribute it and/or modify it under the same
+terms as Perl itself.

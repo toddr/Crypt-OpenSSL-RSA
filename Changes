@@ -1,5 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.18  Sun Feb 23 2003 20:44:35
+        - Add two new methods, new_key_from_parameters and
+          get_key_parameters, which, working with
+          Crypt::OpenSSL::Bignum, allow working directly with the
+          paramaters of an rsa key.
+
 0.17  Mon Jan 06 2003 22:43:31
         - Workaround for gcc 3.2 compile problems:
           "/usr/include/openssl/des.h:193: parse error before '&' token"
@@ -26,16 +32,16 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
           Safefree, not free, to release memory allocated by New
 
 0.13  Thu Mar 21 00:10:30
-	- Incorporating patch from Matthias Bauer
-	  <bauerm@immd1.informatik.uni-erlangen.de>, which provides
-	  signing and verification, as well as uses OpenSSL's internal
-	  error reporting system.  This patch also fixes a bug with the
-	  RSA_NO_PADDING_MODE.  Thanks, Matthias!
-	- Deprecate set_padding_mode in favor of use_xxx_padding.
-	- Rather than returning true on success, false on failure, just
-	  croak when there are problems.
-	- Plug memory leaks.
-	- Fix my email address (it's cpan.org, not cpan.com)
+        - Incorporating patch from Matthias Bauer
+          <bauerm@immd1.informatik.uni-erlangen.de>, which provides
+          signing and verification, as well as uses OpenSSL's internal
+          error reporting system.  This patch also fixes a bug with the
+          RSA_NO_PADDING_MODE.  Thanks, Matthias!
+        - Deprecate set_padding_mode in favor of use_xxx_padding.
+        - Rather than returning true on success, false on failure, just
+          croak when there are problems.
+        - Plug memory leaks.
+        - Fix my email address (it's cpan.org, not cpan.com)
 
 0.12  Thu Sep 06 22:44:17
         - Fixing bug with Crypt::OpenSSL::Random interoperability
@@ -44,7 +50,7 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
         - Fixing email address in docs.
 
 0.11  Tue Apr 10 22:45:31
-	- Fixing bug in test.pl.
+        - Fixing bug in test.pl.
 
 0.10  Mon Apr 09 18:25:41
         - Moving random routines into Crypt::OpenSSL::Random
@@ -69,4 +75,4 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
         - Removing Base64 functionality and dependence
 
 0.01  Wed Feb 14 11:21:42 2001
-	- original version; created by h2xs 1.19
+        - original version; created by h2xs 1.19
