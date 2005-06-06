@@ -1,5 +1,9 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.22  Mon Jun  6 20:34:48 GMT 2005	Chris Drake <christopher@pobox.com>
+        - Corrected the Makefile.PL to include a required library /usr/kerberos/include
+	  so that this module can actually compile OK on RedHat
+
 0.21  Sun Feb 15 2004 21:13:45
         - Include t/format.t in the MANIFEST file, so that it is
           actually included in the distribution.

@@ -9,5 +9,6 @@ WriteMakefile(
     'LIBS'	=> ['-lssl -lcrypto'],   # e.g., '-lm'
     'PREREQ_PM' => { 'Crypt::OpenSSL::Random' => 0 },
     'DEFINE'	=> '-DPERL5',   # perl-5.8/gcc-3.2 needs this
-    'INC'	=> '',     # e.g., '-I/usr/include/other'
+    # The following library included by Chris Drake to correct compile errors on RedHat
+    'INC'	=> '-I/usr/kerberos/include',     # e.g., '-I/usr/include/other'
 );
