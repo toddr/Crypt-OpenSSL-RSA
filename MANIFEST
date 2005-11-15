@@ -5,8 +5,6 @@ RSA.pm
 RSA.xs
 README
 typemap
-t/legacy.t
 t/rsa.t
 t/bignum.t
 t/format.t
-META.yml                                 Module meta-data (added by MakeMaker)
