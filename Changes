@@ -1,5 +1,12 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.23  Wed Apr 12 2006 00:06:10
+        - Provide 32 bytes of seeding in tests, up from 19.
+        - Stop relying on implicit includes, which disappeared in the 0.98
+          release of OpenSSL.
+        - Apply patch from Jim Radford <radford@blackbean.org> to add support
+          for SHA{224,256,384,512}
+
 0.22  Mon Nov 15 2005 21:13:20
         - Add public_decrypt, private_encrypt methods, contributed
           by Paul G. Weiss <paul@weiss.name>

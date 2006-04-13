@@ -10,7 +10,7 @@ require AutoLoader;
 
 @ISA = qw(DynaLoader);
 
-$VERSION = '0.22';
+$VERSION = '0.23';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -239,6 +239,11 @@ verifying messages.
 
 Use the RFC 3174 Secure Hashing Algorithm (FIPS 180-1) when signing
 and verifying messages. This is the default.
+
+=item use_sha224_hash, use_sha256_hash, use_sha384_hash, use_sha512_hash
+
+These FIPS 180-2 hash algorithms, for use when signing and verifying
+messages, are only available with newer openssl versions (>= 0.9.8).
 
 =item use_ripemd160_hash
 

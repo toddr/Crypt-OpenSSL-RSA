@@ -4,7 +4,7 @@ use Test;
 use Crypt::OpenSSL::Random;
 use Crypt::OpenSSL::RSA;
 
-BEGIN { plan tests => 31 }
+BEGIN { plan tests => 31 + (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash") ? 3*4 : 0) }
 
 sub _Test_Encrypt_And_Decrypt
 {
@@ -47,7 +47,7 @@ sub _Test_Sign_And_Verify
 # data used by the OpenSSL random library apparently does not span
 # across perl XS modules.
 
-Crypt::OpenSSL::Random::random_seed("Here are 20 bytes...");
+Crypt::OpenSSL::Random::random_seed("OpenSSL needs at least 32 bytes.");
 Crypt::OpenSSL::RSA->import_random_seed();
 
 ok(Crypt::OpenSSL::RSA->generate_key(512)->size() * 8 == 512);
@@ -90,6 +90,24 @@ _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
 $rsa->use_sha1_hash();
 $rsa_pub->use_sha1_hash();
 _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+
+if (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash")) {
+    $rsa->use_sha224_hash();
+    $rsa_pub->use_sha224_hash();
+    _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+
+    $rsa->use_sha256_hash();
+    $rsa_pub->use_sha256_hash();
+    _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+
+    $rsa->use_sha384_hash();
+    $rsa_pub->use_sha384_hash();
+    _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+
+    $rsa->use_sha512_hash();
+    $rsa_pub->use_sha512_hash();
+    _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+}
 
 $rsa->use_ripemd160_hash();
 $rsa_pub->use_ripemd160_hash();

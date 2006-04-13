@@ -2,9 +2,17 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include <openssl/ssl.h>
+#include <openssl/bio.h>
 #include <openssl/bn.h>
 #include <openssl/err.h>
+#include <openssl/md5.h>
+#include <openssl/objects.h>
+#include <openssl/pem.h>
+#include <openssl/rand.h>
+#include <openssl/ripemd.h>
+#include <openssl/rsa.h>
+#include <openssl/sha.h>
+#include <openssl/ssl.h>
 
 typedef struct
 {
@@ -47,8 +55,6 @@ char is_private(rsaData* p_rsa)
 SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
 {
     rsaData* rsa;
-    SV* rsaSv;
-    SV* rsaSvRef;
 
     CHECK_NEW(rsa, 1, rsaData);
     rsa->rsa = p_rsa;
@@ -69,6 +75,20 @@ int get_digest_length(int hash_method)
         case NID_sha1:
             return SHA_DIGEST_LENGTH;
             break;
+#ifdef SHA512_DIGEST_LENGTH
+        case NID_sha224:
+            return SHA224_DIGEST_LENGTH;
+            break;
+        case NID_sha256:
+            return SHA256_DIGEST_LENGTH;
+            break;
+        case NID_sha384:
+            return SHA384_DIGEST_LENGTH;
+            break;
+        case NID_sha512:
+            return SHA512_DIGEST_LENGTH;
+            break;
+#endif
         case NID_ripemd160:
             return RIPEMD160_DIGEST_LENGTH;
             break;
@@ -78,12 +98,12 @@ int get_digest_length(int hash_method)
     }
 }
 
-char* get_message_digest(SV* text_SV, int hash_method)
+unsigned char* get_message_digest(SV* text_SV, int hash_method)
 {
-    int text_length;
+    STRLEN text_length;
     unsigned char* text;
 
-    text = SvPV(text_SV, text_length);
+    text = (unsigned char*) SvPV(text_SV, text_length);
 
     switch(hash_method)
     {
@@ -93,6 +113,20 @@ char* get_message_digest(SV* text_SV, int hash_method)
         case NID_sha1:
             return SHA1(text, text_length, NULL);
             break;
+#ifdef SHA512_DIGEST_LENGTH
+        case NID_sha224:
+            return SHA224(text, text_length, NULL);
+            break;
+        case NID_sha256:
+            return SHA256(text, text_length, NULL);
+            break;
+        case NID_sha384:
+            return SHA384(text, text_length, NULL);
+            break;
+        case NID_sha512:
+            return SHA512(text, text_length, NULL);
+            break;
+#endif
         case NID_ripemd160:
             return RIPEMD160(text, text_length, NULL);
             break;
@@ -126,7 +160,7 @@ SV* extractBioString(BIO* p_stringBio)
 RSA* _load_rsa_key(SV* p_keyStringSv,
                    RSA*(*p_loader)(BIO*, RSA**, pem_password_cb*, void*))
 {
-    int keyStringLength;
+    STRLEN keyStringLength;
     char* keyString;
 
     RSA* rsa;
@@ -146,19 +180,20 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
 }
 
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
-              int (*p_crypt)(int, unsigned char*, unsigned char*, RSA*, int))
+              int (*p_crypt)(int, const unsigned char*, unsigned char*, RSA*, int))
 {
-    int from_length, to_length;
+    STRLEN from_length, to_length;
     int size;
     unsigned char* from;
-    unsigned char* to;
+    char* to;
     SV* sv;
 
-    from = SvPV(p_from, from_length);
+    from = (unsigned char*) SvPV(p_from, from_length);
     size = RSA_size(p_rsa->rsa);
     CHECK_NEW(to, size, char);
 
-    to_length = p_crypt(from_length, from, to, p_rsa->rsa, p_rsa->padding);
+    to_length = p_crypt(
+       from_length, from, (unsigned char*) to, p_rsa->rsa, p_rsa->padding);
 
     if (to_length < 0)
     {
@@ -279,8 +314,8 @@ _new_key_from_parameters(proto, n, e, d, p, q)
   PREINIT:
     RSA* rsa;
     BN_CTX* ctx;
-    BIGNUM* p_minus_1;
-    BIGNUM* q_minus_1;
+    BIGNUM* p_minus_1 = NULL;
+    BIGNUM* q_minus_1 = NULL;
     int error;
   CODE:
 {
@@ -420,7 +455,7 @@ int
 _random_seed(random_bytes_SV)
     SV* random_bytes_SV;
   PREINIT:
-    int random_bytes_length;
+    STRLEN random_bytes_length;
     char* random_bytes;
   CODE:
     random_bytes = SvPV(random_bytes_SV, random_bytes_length);
@@ -451,6 +486,34 @@ use_sha1_hash(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->hashMode =  NID_sha1;
+
+#ifdef SHA512_DIGEST_LENGTH
+
+void
+use_sha224_hash(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    p_rsa->hashMode =  NID_sha224;
+
+void
+use_sha256_hash(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    p_rsa->hashMode =  NID_sha256;
+
+void
+use_sha384_hash(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    p_rsa->hashMode =  NID_sha384;
+
+void
+use_sha512_hash(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    p_rsa->hashMode =  NID_sha512;
+
+#endif
 
 void
 use_ripemd160_hash(p_rsa)
@@ -487,9 +550,9 @@ sign(p_rsa, text_SV)
     rsaData* p_rsa;
     SV* text_SV;
   PREINIT:
-    unsigned char* signature;
-    char* digest;
-    int signature_length;
+    char* signature;
+    unsigned char* digest;
+    unsigned int signature_length;
   CODE:
 {
     if (!is_private(p_rsa))
@@ -503,7 +566,7 @@ sign(p_rsa, text_SV)
     CHECK_OPEN_SSL(RSA_sign(p_rsa->hashMode,
                             digest,
                             get_digest_length(p_rsa->hashMode),
-                            signature,
+                            (unsigned char*) signature,
                             &signature_length,
                             p_rsa->rsa));
     RETVAL = newSVpvn(signature, signature_length);
@@ -522,10 +585,10 @@ verify(p_rsa, text_SV, sig_SV)
 PPCODE:
 {
     unsigned char* sig;
-    char* digest;
-    int sig_length;
+    unsigned char* digest;
+    STRLEN sig_length;
 
-    sig = SvPV(sig_SV, sig_length);
+    sig = (unsigned char*) SvPV(sig_SV, sig_length);
     if (RSA_size(p_rsa->rsa) < sig_length)
     {
         croak("Signature longer than key");
