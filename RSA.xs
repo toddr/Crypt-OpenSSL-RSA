@@ -47,7 +47,7 @@ void croakSsl(char* p_file, int p_line)
 
 #define THROW(p_result) if (!(p_result)) { error = 1; goto err; }
 
-char is_private(rsaData* p_rsa)
+char _is_private(rsaData* p_rsa)
 {
     return(p_rsa->rsa->d != NULL);
 }
@@ -148,11 +148,11 @@ SV* extractBioString(BIO* p_stringBio)
     SV* sv;
     BUF_MEM* bptr;
 
-    BIO_flush(p_stringBio);
+    CHECK_OPEN_SSL(BIO_flush(p_stringBio) == 1);
     BIO_get_mem_ptr(p_stringBio, &bptr);
     sv = newSVpv(bptr->data, bptr->length);
 
-    BIO_set_close(p_stringBio, BIO_CLOSE);
+    CHECK_OPEN_SSL(BIO_set_close(p_stringBio, BIO_CLOSE) == 1);
     BIO_free(p_stringBio);
     return sv;
 }
@@ -172,7 +172,7 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
 
     rsa = p_loader(stringBIO, NULL, NULL, NULL);
 
-    BIO_set_close(stringBIO, BIO_CLOSE);
+    CHECK_OPEN_SSL(BIO_set_close(stringBIO, BIO_CLOSE) == 1);
     BIO_free(stringBIO);
 
     CHECK_OPEN_SSL(rsa);
@@ -182,7 +182,8 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
               int (*p_crypt)(int, const unsigned char*, unsigned char*, RSA*, int))
 {
-    STRLEN from_length, to_length;
+    STRLEN from_length;
+    int to_length;
     int size;
     unsigned char* from;
     char* to;
@@ -410,6 +411,10 @@ decrypt(p_rsa, p_ciphertext)
     rsaData* p_rsa;
     SV* p_ciphertext;
   CODE:
+    if (!_is_private(p_rsa))
+    {
+        croak("Public keys cannot decrypt");
+    }
     RETVAL = rsa_crypt(p_rsa, p_ciphertext, RSA_private_decrypt);
   OUTPUT:
     RETVAL
@@ -419,6 +424,10 @@ private_encrypt(p_rsa, p_plaintext)
     rsaData* p_rsa;
     SV* p_plaintext;
   CODE:
+    if (!_is_private(p_rsa))
+    {
+        croak("Public keys cannot private_encrypt");
+    }
     RETVAL = rsa_crypt(p_rsa, p_plaintext, RSA_private_encrypt);
   OUTPUT:
     RETVAL
@@ -444,6 +453,10 @@ int
 check_key(p_rsa)
     rsaData* p_rsa;
   CODE:
+    if (!_is_private(p_rsa))
+    {
+        croak("Public keys cannot be checked");
+    }
     RETVAL = RSA_check_key(p_rsa->rsa);
   OUTPUT:
     RETVAL
@@ -555,7 +568,7 @@ sign(p_rsa, text_SV)
     unsigned int signature_length;
   CODE:
 {
-    if (!is_private(p_rsa))
+    if (!_is_private(p_rsa))
     {
         croak("Public keys cannot sign messages.");
     }
@@ -614,3 +627,11 @@ PPCODE:
             break;
     }
 }
+
+int
+is_private(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    RETVAL = _is_private(p_rsa);
+  OUTPUT:
+    RETVAL

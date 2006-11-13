@@ -4,7 +4,7 @@ use Test;
 use Crypt::OpenSSL::Random;
 use Crypt::OpenSSL::RSA;
 
-BEGIN { plan tests => 31 + (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash") ? 3*4 : 0) }
+BEGIN { plan tests => 45 + (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash") ? 3*6 : 0) }
 
 sub _Test_Encrypt_And_Decrypt
 {
@@ -37,6 +37,17 @@ sub _Test_Sign_And_Verify
     $false_sig =~ tr/[a-f]/[0a-d]/;
     ok(! $rsa_pub->verify($plaintext, pack("H*", $false_sig)));
     ok(! $rsa->verify($plaintext, pack("H*", $false_sig)));
+
+    my $sig_of_other = $rsa->sign("different");
+    ok(!$rsa_pub->verify($plaintext, $sig_of_other));
+    ok(!$rsa->verify($plaintext, $sig_of_other));
+}
+
+sub _check_for_croak
+{
+    my ($code, $expected) = @_;
+    eval { &$code() };
+    ok($@, "/$expected/");
 }
 
 # On platforms without a /dev/random, we need to manually seed.  In
@@ -80,6 +91,26 @@ ok($plaintext eq $rsa_priv->decrypt($rsa_priv->encrypt($plaintext)));
 my $rsa_pub = Crypt::OpenSSL::RSA->new_public_key($public_key_string);
 $rsa->use_pkcs1_oaep_padding();
 ok($plaintext eq $rsa->decrypt($rsa_pub->encrypt($plaintext)));
+
+ok($rsa_priv->is_private());
+ok(!$rsa_pub->is_private());
+
+_check_for_croak
+    (sub { $rsa_pub->decrypt($rsa_pub->encrypt($plaintext)); },
+     "Public keys cannot decrypt");
+
+_check_for_croak
+    (sub { $rsa_pub->check_key(); },
+     "Public keys cannot be checked");
+
+_check_for_croak
+    (sub { $rsa_pub->private_encrypt("foo"); },
+     "Public keys cannot private_encrypt");
+
+_check_for_croak
+    (sub { $rsa_pub->sign("foo"); },
+     "Public keys cannot sign messages");
+
 
 $plaintext .= $plaintext x 5;
 # check signature algorithms

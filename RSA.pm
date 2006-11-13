@@ -10,7 +10,7 @@ require AutoLoader;
 
 @ISA = qw(DynaLoader);
 
-$VERSION = '0.23';
+$VERSION = '0.24';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
@@ -275,7 +275,7 @@ exactly this size.
 =item check_key
 
 This function validates the RSA key, returning a true value if the key
-is valid, and a false value otherwise.
+is valid, and a false value otherwise.  Croaks if the key is public only.
 
 =item get_key_parameters
 
@@ -285,6 +285,10 @@ the prime factors of n, e is the public exponent and d is the private
 exponent.  Some of these values may return as undef; only n and e will
 be defined for a public key.  The Crypt::OpenSSL::Bignum module must
 be installed for this to work.
+
+=item is_private
+
+Return true if this is a private key, and false if it is private only.
 
 =cut
 

@@ -1,5 +1,17 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.24  Mon Nov 13 2006 08:21:14
+        - Fix a bug reported by Mark Martinec <Mark.Martinec@ijs.si>
+          where encrypt could segfault if called with insufficient
+          data; it now informatively croaks instead.
+        - Fix a bug reported by Mark Martinec where check_key would
+          segfault instead of croaking when called on a public key.
+        - Fix decrypt and private_encrypt to croak instead of segfault when
+          called on a public key.
+        - Add an is_private method.
+        - Silence a few compiler warnings about ignoring return values
+          from certain BIO_* methods.
+
 0.23  Wed Apr 12 2006 00:06:10
         - Provide 32 bytes of seeding in tests, up from 19.
         - Stop relying on implicit includes, which disappeared in the 0.98
