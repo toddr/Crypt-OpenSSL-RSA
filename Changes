@@ -1,5 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.25  Sun May 20 2007 12:56:11
+        - Add a LICENSE file.
+        - Fix a bug (reported by many) in rsa.t - we were incorrectly counting
+          the number of tests in situations where use_sha512_hash was
+          not available.
+
 0.24  Mon Nov 13 2006 08:21:14
         - Fix a bug reported by Mark Martinec <Mark.Martinec@ijs.si>
           where encrypt could segfault if called with insufficient

@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Crypt-OpenSSL-RSA
-version:      0.24
+version:      0.25
 version_from: RSA.pm
 installdirs:  site
 requires:

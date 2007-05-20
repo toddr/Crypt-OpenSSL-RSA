@@ -4,7 +4,7 @@ use Test;
 use Crypt::OpenSSL::Random;
 use Crypt::OpenSSL::RSA;
 
-BEGIN { plan tests => 45 + (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash") ? 3*6 : 0) }
+BEGIN { plan tests => 43 + (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_sha512_hash") ? 4*5 : 0) }
 
 sub _Test_Encrypt_And_Decrypt
 {
