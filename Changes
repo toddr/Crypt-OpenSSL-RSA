@@ -1,5 +1,9 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.26  Sun Nov 22 2009 11:01:13
+        - Change subclassing test to generate a 512 bit key in order to work 
+          around an odd issue seen on some 64-bit redhat systems. (CPAN bug 45498)
+
 0.25  Sun May 20 2007 12:56:11
         - Add a LICENSE file.
         - Fix a bug (reported by many) in rsa.t - we were incorrectly counting

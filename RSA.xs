@@ -40,7 +40,7 @@ void croakSsl(char* p_file, int p_line)
 
 #define CHECK_OPEN_SSL(p_result) if (!(p_result)) croakSsl(__FILE__, __LINE__);
 
-#define PACKAGE_CROAK(p_message) croak("%s:%d: %s", (p_message))
+#define PACKAGE_CROAK(p_message) croak("%s", (p_message))
 #define CHECK_NEW(p_var, p_size, p_type) \
   if (New(0, p_var, p_size, p_type) == NULL) \
     { PACKAGE_CROAK("unable to alloc buffer"); }
@@ -486,8 +486,6 @@ _random_status()
   OUTPUT:
     RETVAL
 
-# Sign text. Returns the signature.
-
 void
 use_md5_hash(p_rsa)
     rsaData* p_rsa;
@@ -557,6 +555,8 @@ use_sslv23_padding(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->padding = RSA_SSLV23_PADDING;
+
+# Sign text. Returns the signature.
 
 SV*
 sign(p_rsa, text_SV)

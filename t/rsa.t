@@ -146,7 +146,7 @@ _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
 
 # check subclassing
 
-eval { Crypt::OpenSSL::RSA::Subpackage->generate_key(256); };
+eval { Crypt::OpenSSL::RSA::Subpackage->generate_key(512); };
 ok(!$@);
 
 package Crypt::OpenSSL::RSA::Subpackage;
