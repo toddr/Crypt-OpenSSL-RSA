@@ -1,13 +1,29 @@
---- #YAML:1.0
-name:                Crypt-OpenSSL-RSA
-version:             0.26
-abstract:            ~
-license:             ~
-author:              ~
-generated_by:        ExtUtils::MakeMaker version 6.42
-distribution_type:   module
-requires:     
-    Crypt::OpenSSL::Random:        0
+---
+abstract: 'RSA encoding and decoding, using the openSSL libraries'
+author:
+  - 'Ian Robertson <iroberts@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 0
+  Test: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.571, CPAN::Meta::Converter version 2.110930'
+license: perl
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Crypt-OpenSSL-RSA
+no_index:
+  directory:
+    - t
+    - inc
+recommends:
+  Crypt::OpenSSL::Bignum: 0
+requires:
+  Crypt::OpenSSL::Random: 0
+  Test: 0
+resources:
+  homepage: http://wiki.github.com/toddr/Crypt-OpenSSL-RSA
+  license: http://dev.perl.org/licenses/
+version: 0.26_01
