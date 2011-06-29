@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.27  Wed Jun 29 2011 - Todd Rinaldo (TODDR)
+        - RT 65947 - Fix RSA.pm break with perl 5.14+
+
 0.26  Sun Nov 22 2009 11:01:13
         - Change subclassing test to generate a 512 bit key in order to work 
           around an odd issue seen on some 64-bit redhat systems. (CPAN bug 45498)

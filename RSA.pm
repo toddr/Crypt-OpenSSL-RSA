@@ -6,7 +6,7 @@ use Carp;
 use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
 require DynaLoader;
-require AutoLoader;
+use AutoLoader 'AUTOLOAD';
 
 @ISA = qw(DynaLoader);
 
