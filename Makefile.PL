@@ -19,7 +19,7 @@ WriteMakefile(
         'Test' => 0,
     },
     'OBJECT' => 'RSA.o',
-    'LIBS'	=> ['-lssl -lcrypto'],   # e.g., '-lm'
+    'LIBS'    => ($^O eq 'MSWin32') ? ['-lssl32 -leay32'] : ['-lssl -lcrypto'],
     'DEFINE'	=> '-DPERL5 -DOPENSSL_NO_KRB5',
     # perl-5.8/gcc-3.2 needs -DPERL5, and redhat9 likes -DOPENSSL_NO_KRB5
     'INC'	=> $include,     # e.g., '-I/usr/include/other'
@@ -35,9 +35,9 @@ WriteMakefile(
         },
         resources => {
             'license' => 'http://dev.perl.org/licenses/',
-            'homepage' => 'http://wiki.github.com/toddr/Crypt-OpenSSL-RSA',
+            'homepage' => 'https://metacpan.org/release/Crypt-OpenSSL-RSA',
 #            bugtracker => 'http://code.google.com/p/Crypt-OpenSSL-RSA/issues/list',
-            'repository' => 'http=>//github.com/toddr/Crypt-OpenSSL-RSA',
+            'repository' => 'http://github.com/monken/Crypt-OpenSSL-RSA',
 #            MailingList => 'http://groups.google.com/group/Crypt-OpenSSL-RSA',
         }
     }

@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
+        - RT 56454 - Win32 compatibility patch (kmx@cpan.org)
+
 0.27  Wed Jun 29 2011 - Todd Rinaldo (TODDR)
         - RT 65947 - Fix RSA.pm break with perl 5.14+
 
