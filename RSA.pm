@@ -107,7 +107,7 @@ PKCS1_OAEP, but can be changed with use_xxx_padding.
 =item generate_key
 
 Create a new Crypt::OpenSSL::RSA object by constructing a
-private/public key pair.  The first (mandetory) argument is the key
+private/public key pair.  The first (mandatory) argument is the key
 size, while the second optional argument specifies the public exponent
 (the default public exponent is 65537).  The padding is set to
 PKCS1_OAEP, but can be changed with use_xxx_padding methods.
