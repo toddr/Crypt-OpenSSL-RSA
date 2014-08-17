@@ -298,7 +298,20 @@ generate_key(proto, bitsSV, exponent = 65537)
   PREINIT:
     RSA* rsa;
   CODE:
-    CHECK_OPEN_SSL(rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    BIGNUM *e;
+    int rc;
+    e = BN_new();
+    BN_set_word(e, exponent);
+    rsa = RSA_new();
+    rc = RSA_generate_key_ex(rsa, SvIV(bitsSV), e, NULL);
+    BN_free(e);
+    e = NULL;
+    CHECK_OPEN_SSL(rc != -1);
+#else
+    rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
+#endif
+    CHECK_OPEN_SSL(rsa);
     RETVAL = make_rsa_obj(proto, rsa);
   OUTPUT:
     RETVAL
