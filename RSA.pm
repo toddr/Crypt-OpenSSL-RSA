@@ -1,20 +1,22 @@
 package Crypt::OpenSSL::RSA;
 
 use strict;
+use warnings;
+
 use Carp;
 
-use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
+our $VERSION = '0.29';
 
-require DynaLoader;
+use XSLoader;
+
+our $AUTOLOAD;
 use AutoLoader 'AUTOLOAD';
 
-@ISA = qw(DynaLoader);
 
-$VERSION = '0.29';
+XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
-bootstrap Crypt::OpenSSL::RSA $VERSION;
-
-BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
+# If possible.
+eval { require Crypt::OpenSSL::Bignum }; ## no critic(RequireCheckingReturnValueOfEval)
 
 1;
 
