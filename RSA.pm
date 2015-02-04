@@ -40,7 +40,7 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using openSSL
   print "public key (in X509 format) is:\n",
         $rsa->get_public_key_x509_string();
 
-  $rsa_priv->use_md5_hash(); # use_sha1_hash is the default
+  $rsa_priv->use_md5_hash(); # insecure. use_sha256_hash or use_sha1_hash are the default
   $signature = $rsa_priv->sign($plaintext);
   print "Signed correctly\n" if ($rsa->verify($plaintext, $signature));
 
@@ -102,11 +102,11 @@ Create a new Crypt::OpenSSL::RSA object by constructing a
 private/public key pair.  The first (mandatory) argument is the key
 size, while the second optional argument specifies the public exponent
 (the default public exponent is 65537).  The padding is set to
-PKCS1_OAEP, but can be changed with use_xxx_padding methods.
+C<PKCS1_OAEP>, but can be changed with use_xxx_padding methods.
 
 =item new_key_from_parameters
 
-Given Crypt::OpenSSL::Bignum objects for n, e, and optionally d, p,
+Given L<Crypt::OpenSSL::Bignum> objects for n, e, and optionally d, p,
 and q, where p and q are the prime factors of n, e is the public
 exponent and d is the private exponent, create a new
 Crypt::OpenSSL::RSA object using these values.  If p and q are
@@ -125,7 +125,7 @@ sub new_key_from_parameters
 
 =item import_random_seed
 
-Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
+Import a random seed from L<Crypt::OpenSSL::Random>, since the OpenSSL
 libraries won't allow sharing of random structures across perl XS
 modules.
 
@@ -211,14 +211,14 @@ of padding.
 
 =item use_pkcs1_oaep_padding
 
-Use EME-OAEP padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
+Use C<EME-OAEP> padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
 an empty encoding parameter. This mode of padding is recommended for
 all new applications.  It is the default mode used by
 Crypt::OpenSSL::RSA.
 
 =item use_sslv23_padding
 
-Use PKCS #1 v1.5 padding with an SSL-specific modification that
+Use C<PKCS #1 v1.5> padding with an SSL-specific modification that
 denotes that the server is SSL3 capable.
 
 =item use_md5_hash
@@ -226,20 +226,30 @@ denotes that the server is SSL3 capable.
 Use the RFC 1321 MD5 hashing algorithm by Ron Rivest when signing and
 verifying messages.
 
+Note that this is considered B<insecure>.
+
 =item use_sha1_hash
 
 Use the RFC 3174 Secure Hashing Algorithm (FIPS 180-1) when signing
-and verifying messages. This is the default.
+and verifying messages. This is the default, when use_sha256_hash is
+not available.
 
 =item use_sha224_hash, use_sha256_hash, use_sha384_hash, use_sha512_hash
 
 These FIPS 180-2 hash algorithms, for use when signing and verifying
 messages, are only available with newer openssl versions (>= 0.9.8).
 
+use_sha256_hash is the default hash mode when available.
+
 =item use_ripemd160_hash
 
 Dobbertin, Bosselaers and Preneel's RIPEMD hashing algorithm when
 signing and verifying messages.
+
+=item use_whirlpool_hash
+
+Vincent Rijmen und Paulo S. L. M. Barreto ISO/IEC 10118-3:2004
+WHIRLPOOL hashing algorithm when signing and verifying messages.
 
 =item size
 

@@ -29,6 +29,7 @@ WriteMakefile(
   'LIBS'            => $libdir ? [ "-L$libdir", @libs ] : \@libs,
   'INC'             => $include,
 
+  'SIGN' => 1,
   'clean' => { FILES => 'Crypt-OpenSSL-RSA-*' },
   ($ExtUtils::MakeMaker::VERSION >= 6.3002 ? (
      'LICENSE'  => 'perl', ) : ()),

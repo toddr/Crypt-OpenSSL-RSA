@@ -10,6 +10,7 @@ Makefile.old
 *.gcov
 *.gcno
 cover_db
+/log.test-*
 /Debian_CPANTS.txt
 /RSA.bs
 /RSA.c
