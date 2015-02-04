@@ -102,6 +102,11 @@ int get_digest_length(int hash_method)
         case NID_ripemd160:
             return RIPEMD160_DIGEST_LENGTH;
             break;
+#ifdef WHIRLPOOL_DIGEST_LENGTH
+        case NID_whirlpool:
+            return WHIRLPOOL_DIGEST_LENGTH;
+            break;
+#endif
         default:
             croak("Unknown digest hash mode %u", hash_method);
             break;
@@ -140,6 +145,11 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
         case NID_ripemd160:
             return RIPEMD160(text, text_length, NULL);
             break;
+#ifdef WHIRLPOOL_DIGEST_LENGTH
+        case NID_whirlpool:
+            return WHIRLPOOL(text, text_length, NULL);
+            break;
+#endif
         default:
             croak("Unknown digest hash mode %u", hash_method);
             break;
@@ -605,6 +615,16 @@ use_ripemd160_hash(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->hashMode =  NID_ripemd160;
+
+#ifdef WHIRLPOOL_DIGEST_LENGTH
+
+void
+use_whirlpool_hash(p_rsa)
+    rsaData* p_rsa;
+  CODE:
+    p_rsa->hashMode =  NID_whirlpool;
+
+#endif
 
 void
 use_no_padding(p_rsa)

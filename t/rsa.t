@@ -149,6 +149,12 @@ $rsa->use_ripemd160_hash();
 $rsa_pub->use_ripemd160_hash();
 _Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
 
+if (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_whirlpool_hash")) {
+    $rsa->use_whirlpool_hash();
+    $rsa_pub->use_whirlpool_hash();
+    _Test_Sign_And_Verify($plaintext, $rsa, $rsa_pub);
+}
+
 # check subclassing
 
 eval { Crypt::OpenSSL::RSA::Subpackage->generate_key(512); };

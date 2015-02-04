@@ -29,6 +29,7 @@ install:
   - export AUTOMATED_TESTING=1 HARNESS_TIMER=1 AUTHOR_TESTING=1 RELEASE_TESTING=1
   - cpanm --notest Crypt::OpenSSL::Guess
   - cpanm --notest Crypt::OpenSSL::Random
+  - cpanm --notest Crypt::OpenSSL::Bignum
   - cpanm --installdeps --notest .
 
 
