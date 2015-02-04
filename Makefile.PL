@@ -12,7 +12,7 @@ if ($args =~ /INCDIR[ =](\S+)/) {
 if ($args =~ /LIBDIR[ =](\S+)/) {
   $libdir = $1;
 }
-my @libs = qw(-lssl -lcrypto);
+my $libs = '-lssl -lcrypto';
 
 WriteMakefile(
   'NAME'	  => 'Crypt::OpenSSL::RSA',
@@ -26,7 +26,7 @@ WriteMakefile(
   },
   'DEFINE'	=> '-DPERL5 -DOPENSSL_NO_KRB5',
   # perl-5.8/gcc-3.2 needs -DPERL5, and redhat9 likes -DOPENSSL_NO_KRB5
-  'LIBS'            => $libdir ? [ "-L$libdir", @libs ] : \@libs,
+  'LIBS'            => $libdir ? [ "-L$libdir $libs" ] : [ $libs ],
   'INC'             => $include,
 
   'SIGN' => 1,
