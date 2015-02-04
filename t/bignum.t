@@ -1,17 +1,16 @@
 use strict;
-use Test;
+use Test::More;
 
 use Crypt::OpenSSL::RSA;
 
-my $bignum_missing;
-
 BEGIN
 {
-    # FIXME - add version requirement
     eval { require Crypt::OpenSSL::Bignum; };
-    $bignum_missing = $@;
-    plan(tests => $bignum_missing ? 0 : 64);
+    if ($@) {
+      plan skip_all => "Crypt::OpenSSL::Bignum missing";
+    }
 }
+plan(tests => 64);
 
 sub check_datum
 {
@@ -37,7 +36,6 @@ sub check_key_parameters # runs 8 tests
     check_datum($iqmp, $riqmp);
 }
 
-unless ($bignum_missing)
 {
     my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
     my $one = Crypt::OpenSSL::Bignum->one();

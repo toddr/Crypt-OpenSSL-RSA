@@ -3,21 +3,15 @@ package Crypt::OpenSSL::RSA;
 use strict;
 use Carp;
 
-use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
-
-require DynaLoader;
-use AutoLoader 'AUTOLOAD';
-
-@ISA = qw(DynaLoader);
-
-$VERSION = '0.28';
-
-bootstrap Crypt::OpenSSL::RSA $VERSION;
+use vars qw ($VERSION);
+$VERSION = '0.29';
+use XSLoader;
 
 BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
 
-1;
+XSLoader::load( __PACKAGE__, $VERSION );
 
+1;
 __END__
 
 =head1 NAME
@@ -306,8 +300,14 @@ There is a small memory leak when generating new keys of more than 512 bits.
 
 =head1 AUTHOR
 
-Ian Robertson, iroberts@cpan.org.  For support, please email
-perl-openssl-users@lists.sourceforge.net.
+Ian Robertson, iroberts@cpan.org (inactive)
+
+Maintainers: Moritz Onken, Todd Rinaldo
+
+=head1 LICENSE
+
+This module is available under the same licences as perl, the Artistic
+license and the GPL.
 
 =head1 SEE ALSO
 

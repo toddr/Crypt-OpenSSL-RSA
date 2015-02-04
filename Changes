@@ -1,5 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.29  2015-02-04 13:18:22 rurban
+        - Modernization as in Crypt::OpenSSL::Random:
+          better MSWin32 hints, fixes MSVC libraries,
+          more meta tests,
+          use XSLoader
+
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)
 
