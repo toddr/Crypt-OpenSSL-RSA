@@ -8,6 +8,7 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
           auto-generate README, META.json, META.yml
           add gcov and release targets
           accept INCDIR= and LIBDIR= arguments to find openssl
+        - prefer hash mode NID_sha256 over NID_sha1 for sign
 
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)
