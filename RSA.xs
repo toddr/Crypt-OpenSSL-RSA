@@ -64,7 +64,11 @@ SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
 
     CHECK_NEW(rsa, 1, rsaData);
     rsa->rsa = p_rsa;
+#ifdef SHA512_DIGEST_LENGTH
+    rsa->hashMode = NID_sha256;
+#else
     rsa->hashMode = NID_sha1;
+#endif
     rsa->padding = RSA_PKCS1_OAEP_PADDING;
     return sv_bless(
         newRV_noinc(newSViv((IV) rsa)),
@@ -99,7 +103,7 @@ int get_digest_length(int hash_method)
             return RIPEMD160_DIGEST_LENGTH;
             break;
         default:
-            croak("Unknown digest hash code");
+            croak("Unknown digest hash mode %u", hash_method);
             break;
     }
 }
@@ -137,7 +141,7 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
             return RIPEMD160(text, text_length, NULL);
             break;
         default:
-            croak("Unknown digest hash code");
+            croak("Unknown digest hash mode %u", hash_method);
             break;
     }
 }
@@ -331,7 +335,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
 {
     if (!(n && e))
     {
-        croak("At least a modulous and public key must be provided");
+        croak("At least a modulus and public key must be provided");
     }
     CHECK_OPEN_SSL(rsa = RSA_new());
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -627,7 +631,7 @@ sign(p_rsa, text_SV)
 {
     if (!_is_private(p_rsa))
     {
-        croak("Public keys cannot sign messages.");
+        croak("Public keys cannot sign messages");
     }
 
     CHECK_NEW(signature, RSA_size(p_rsa->rsa), char);

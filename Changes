@@ -6,6 +6,7 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
         - Modernization as in Crypt::OpenSSL::Random.
         - better MSWin32 hints, fixes MSVC libraries,
         - more meta tests,
+        - prefer hash mode NID_sha256 over NID_sha1 for sign
 
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)
