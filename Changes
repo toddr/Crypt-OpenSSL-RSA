@@ -5,6 +5,9 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
           better MSWin32 hints, fixes MSVC libraries,
           more meta tests,
           use XSLoader
+          auto-generate README, META.json, META.yml
+          add gcov and release targets
+          accept INCDIR= and LIBDIR= arguments to find openssl
 
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)

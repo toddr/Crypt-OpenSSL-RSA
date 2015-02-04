@@ -6,17 +6,15 @@ use Carp;
 use vars qw ($VERSION);
 $VERSION = '0.29';
 use XSLoader;
+use Crypt::OpenSSL::Random;
 
 BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
 
 XSLoader::load( __PACKAGE__, $VERSION );
 
-1;
-__END__
-
 =head1 NAME
 
-Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
+Crypt::OpenSSL::RSA - RSA encoding and decoding, using openSSL
 
 =head1 SYNOPSIS
 
@@ -53,7 +51,7 @@ somewhat shorter than the block size of a key.  It also allows for decryption,
 signatures and signature verification.
 
 I<NOTE>: Many of the methods in this package can croak, so use eval, or
-Error.pm's try/catch mechanism to capture errors.  Also, while some
+L<Error>'s try/catch mechanism to capture errors.  Also, while some
 methods from earlier versions of this package return true on success,
 this (never documented) behavior is no longer the case.
 
@@ -155,8 +153,7 @@ occupied by the RSA key structure.
 =item get_public_key_string
 
 Return the Base64/DER-encoded PKCS1 representation of the public
-key.  This string has
-header and footer lines:
+key.  This string has header and footer lines:
 
   -----BEGIN RSA PUBLIC KEY------
   -----END RSA PUBLIC KEY------
@@ -298,6 +295,8 @@ sub get_key_parameters
 
 There is a small memory leak when generating new keys of more than 512 bits.
 
+There is no Crypt::CBC support.
+
 =head1 AUTHOR
 
 Ian Robertson, iroberts@cpan.org (inactive)
@@ -316,3 +315,6 @@ L<rsa(3)>, L<RSA_new(3)>, L<RSA_public_encrypt(3)>, L<RSA_size(3)>,
 L<RSA_generate_key(3)>, L<RSA_check_key(3)>
 
 =cut
+
+1;
+
