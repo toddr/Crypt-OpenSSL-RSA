@@ -180,7 +180,12 @@ and is the format that is produced by running C<openssl rsa -pubout>.
 
 =item get_private_key_string
 
-Return the DER-encoded PKCS1 representation of the private key.
+Return the Base64/DER-encoded PKCS1 representation of the private
+key.  This string has
+header and footer lines:
+
+  -----BEGIN RSA PRIVATE KEY------
+  -----END RSA PRIVATE KEY------
 
 =item encrypt
 
