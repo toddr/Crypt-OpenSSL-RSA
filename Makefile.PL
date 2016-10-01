@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 
-use ExtUtils::MakeMaker;
+use ExtUtils::MakeMaker 6.48;
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
@@ -15,6 +16,7 @@ WriteMakefile(
      AUTHOR  => 'Ian Robertson <iroberts@cpan.org>',
     'VERSION_FROM' => 'RSA.pm', # finds $VERSION
     'ABSTRACT_FROM' => 'RSA.pm',
+    'MIN_PERL_VERSION' => 5.006,
     'PL_FILES' => {},
     ($ExtUtils::MakeMaker::VERSION >= 6.3002 ? ('LICENSE'        => 'perl', ) : ()),
     'PREREQ_PM' => {
