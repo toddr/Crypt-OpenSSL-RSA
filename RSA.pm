@@ -309,6 +309,14 @@ There is a small memory leak when generating new keys of more than 512 bits.
 Ian Robertson, iroberts@cpan.org.  For support, please email
 perl-openssl-users@lists.sourceforge.net.
 
+=head1 ACKNOWLEDGEMENTS
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (c) 2001-2011 Ian Robertson.  Crypt::OpenSSL::RSA is free
+software; you may redistribute it and/or modify it under the same
+terms as Perl itself.
+
 =head1 SEE ALSO
 
 L<perl(1)>, L<Crypt::OpenSSL::Random(3)>, L<Crypt::OpenSSL::Bignum(3)>,
