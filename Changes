@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.29  Wed Apr 4 2018 - Moritz Onken (PERLER)
+        - Adapt to OpenSSL 1.1.0 (dur-randir)
+
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)
 
@@ -7,7 +10,7 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
         - RT 65947 - Fix RSA.pm break with perl 5.14+
 
 0.26  Sun Nov 22 2009 11:01:13
-        - Change subclassing test to generate a 512 bit key in order to work 
+        - Change subclassing test to generate a 512 bit key in order to work
           around an odd issue seen on some 64-bit redhat systems. (CPAN bug 45498)
 
 0.25  Sun May 20 2007 12:56:11

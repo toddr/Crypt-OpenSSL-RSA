@@ -10,7 +10,7 @@ use AutoLoader 'AUTOLOAD';
 
 @ISA = qw(DynaLoader);
 
-$VERSION = '0.28';
+$VERSION = '0.29';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
