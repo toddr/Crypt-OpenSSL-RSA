@@ -35,10 +35,9 @@ WriteMakefile(
         },
         resources => {
             'license' => 'http://dev.perl.org/licenses/',
-            'homepage' => 'https://metacpan.org/release/Crypt-OpenSSL-RSA',
-#            bugtracker => 'http://code.google.com/p/Crypt-OpenSSL-RSA/issues/list',
-            'repository' => 'http://github.com/monken/Crypt-OpenSSL-RSA',
-#            MailingList => 'http://groups.google.com/group/Crypt-OpenSSL-RSA',
+            'homepage' => 'http://github.com/toddr/Crypt-OpenSSL-RSA',
+            'bugtracker' => 'https://github.com/toddr/Crypt-OpenSSL-RSA/issues',
+            'repository' => 'http://github.com/toddr/Crypt-OpenSSL-RSA',
         }
     }
 );
