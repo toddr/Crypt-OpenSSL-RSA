@@ -1,10 +1,7 @@
 use ExtUtils::MakeMaker;
+use Crypt::OpenSSL::Guess qw(openssl_inc_paths);
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
-
-my $KERBEROS_INCLUDE = "/usr/kerberos/include";
-
-my $include = -d $KERBEROS_INCLUDE ? "-I${KERBEROS_INCLUDE}" : "";
 
 WriteMakefile(
     'NAME'	=> 'Crypt::OpenSSL::RSA',
@@ -22,7 +19,7 @@ WriteMakefile(
     'LIBS'    => ($^O eq 'MSWin32') ? ['-lssl32 -leay32'] : ['-lssl -lcrypto'],
     'DEFINE'	=> '-DPERL5 -DOPENSSL_NO_KRB5',
     # perl-5.8/gcc-3.2 needs -DPERL5, and redhat9 likes -DOPENSSL_NO_KRB5
-    'INC'	=> $include,     # e.g., '-I/usr/include/other'
+    'INC'	=> openssl_inc_paths(),     # e.g., '-I/usr/include/other'
 
     'dist'  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     'clean' => { FILES => 'Crypt-OpenSSL-RSA-*' },
@@ -32,6 +29,7 @@ WriteMakefile(
         },
         build_requires => {
             'Test' => 0,  # For testing
+            'Crypt::OpenSSL::Guess' => 0,
         },
         resources => {
             'license' => 'http://dev.perl.org/licenses/',
