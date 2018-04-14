@@ -3,18 +3,17 @@ package Crypt::OpenSSL::RSA;
 use strict;
 use warnings;
 
-use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
+use Carp; # Removing carp will break the XS code.
 
-require DynaLoader;
+our $VERSION = '0.29';
+
+our $AUTOLOAD;
 use AutoLoader 'AUTOLOAD';
 
-@ISA = qw(DynaLoader);
+use XSLoader;
+XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
-$VERSION = '0.29';
-
-bootstrap Crypt::OpenSSL::RSA $VERSION;
-
-BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
+BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }   ## no critic qw(RequireCheckingReturnValueOfEval);
 
 1;
 
