@@ -5,7 +5,7 @@ use warnings;
 
 use Carp; # Removing carp will break the XS code.
 
-our $VERSION = '0.29';
+our $VERSION = '0.29_01';
 
 our $AUTOLOAD;
 use AutoLoader 'AUTOLOAD';
@@ -13,7 +13,7 @@ use AutoLoader 'AUTOLOAD';
 use XSLoader;
 XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
-BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }   ## no critic qw(RequireCheckingReturnValueOfEval);
+BEGIN { eval { use Crypt::OpenSSL::Bignum () } }   ## no critic qw(RequireCheckingReturnValueOfEval);
 
 1;
 

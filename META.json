@@ -22,6 +22,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
+            "Crypt::OpenSSL::Guess" : "0",
             "ExtUtils::MakeMaker" : "0",
             "Test" : "0"
          }
@@ -37,11 +38,12 @@
          },
          "requires" : {
             "Crypt::OpenSSL::Random" : "0",
-            "Test" : "0"
+            "Test::More" : "0",
+            "perl" : "5.006"
          }
       }
    },
-   "release_status" : "stable",
+   "release_status" : "unstable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/toddr/Crypt-OpenSSL-RSA/issues"
@@ -54,6 +56,6 @@
          "url" : "http://github.com/toddr/Crypt-OpenSSL-RSA"
       }
    },
-   "version" : "0.29",
+   "version" : "0.29_01",
    "x_serialization_backend" : "JSON::PP version 2.27400_02"
 }

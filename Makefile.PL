@@ -19,7 +19,7 @@ WriteMakefile(
     ( $ExtUtils::MakeMaker::VERSION >= 6.3002 ? ( 'LICENSE' => 'perl', ) : () ),
     'PREREQ_PM' => {
         'Crypt::OpenSSL::Random' => 0,
-        'Test'                   => 0,
+        'Test::More'             => 0,
     },
     'OBJECT' => 'RSA.o',
     'LIBS'   => ( $^O eq 'MSWin32' ) ? ['-lssl32 -leay32'] : ['-lssl -lcrypto'],

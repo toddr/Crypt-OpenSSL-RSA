@@ -1,6 +1,6 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
-0.29  Fri Apr 13 2018
+0.29_01  Fri Apr 13 2018
         - Adapt to OpenSSL 1.1.0 (dur-randir)
         - Move issue tracker to github.
         - Modernization as in Crypt::OpenSSL::Random.

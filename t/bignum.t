@@ -4,8 +4,8 @@ use Test::More;
 use Crypt::OpenSSL::RSA;
 
 $INC{'Crypt/OpenSSL/Bignum.pm'}
-    ? plan(skip_all => "Crypt::OpenSSL::Bignum required for bignum tests")
-    : plan(tests => 64);
+    ? plan(tests => 64)
+    : plan(skip_all => "Crypt::OpenSSL::Bignum required for bignum tests");
 
 sub check_datum
 {

@@ -1,5 +1,5 @@
 use strict;
-use Test;
+use Test::More;
 
 use Crypt::OpenSSL::Random;
 use Crypt::OpenSSL::RSA;
