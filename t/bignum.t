@@ -1,5 +1,5 @@
 use strict;
-use Test;
+use Test::More;
 
 use Crypt::OpenSSL::RSA;
 
@@ -10,7 +10,11 @@ BEGIN
     # FIXME - add version requirement
     eval { require Crypt::OpenSSL::Bignum; };
     $bignum_missing = $@;
-    plan(tests => $bignum_missing ? 0 : 64);
+    #rypt::OpenSSL::Bignum;
+
+    $bignum_missing
+        ? plan(skip_all => "Crypt::OpenSSL::Bignum required for bignum tests")
+        : plan(tests => 64);
 }
 
 sub check_datum

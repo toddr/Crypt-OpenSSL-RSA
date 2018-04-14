@@ -1,7 +1,7 @@
 package Crypt::OpenSSL::RSA;
 
 use strict;
-use Carp;
+use warnings;
 
 use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
@@ -54,11 +54,11 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
 
 =head1 DESCRIPTION
 
-Crypt::OpenSSL::RSA provides the ability to RSA encrypt strings which are
+C<Crypt::OpenSSL::RSA> provides the ability to RSA encrypt strings which are
 somewhat shorter than the block size of a key.  It also allows for decryption,
 signatures and signature verification.
 
-I<NOTE>: Many of the methods in this package can croak, so use eval, or
+I<NOTE>: Many of the methods in this package can croak, so use C<eval>, or
 Error.pm's try/catch mechanism to capture errors.  Also, while some
 methods from earlier versions of this package return true on success,
 this (never documented) behavior is no longer the case.
@@ -69,13 +69,13 @@ this (never documented) behavior is no longer the case.
 
 =item new_public_key
 
-Create a new Crypt::OpenSSL::RSA object by loading a public key in
+Create a new C<Crypt::OpenSSL::RSA> object by loading a public key in
 from a string containing Base64/DER-encoding of either the PKCS1 or
 X.509 representation of the key.  The string should include the
------BEGIN...----- and -----END...----- lines.
+C<-----BEGIN...-----> and C<-----END...-----> lines.
 
 The padding is set to PKCS1_OAEP, but can be changed with the
-use_xxx_padding methods
+C<use_xxx_padding> methods.
 
 =cut
 
@@ -98,28 +98,28 @@ sub new_public_key
 
 =item new_private_key
 
-Create a new Crypt::OpenSSL::RSA object by loading a private key in
+Create a new C<Crypt::OpenSSL::RSA> object by loading a private key in
 from an string containing the Base64/DER encoding of the PKCS1
 representation of the key.  The string should include the
------BEGIN...----- and -----END...----- lines.  The padding is set to
-PKCS1_OAEP, but can be changed with use_xxx_padding.
+C<-----BEGIN...-----> and C<-----END...-----> lines.  The padding is set to
+PKCS1_OAEP, but can be changed with C<use_xxx_padding>.
 
 =item generate_key
 
-Create a new Crypt::OpenSSL::RSA object by constructing a
+Create a new C<Crypt::OpenSSL::RSA> object by constructing a
 private/public key pair.  The first (mandatory) argument is the key
 size, while the second optional argument specifies the public exponent
 (the default public exponent is 65537).  The padding is set to
-PKCS1_OAEP, but can be changed with use_xxx_padding methods.
+PKCS1_OAEP, but can be changed with C<use_xxx_padding> methods.
 
 =item new_key_from_parameters
 
-Given Crypt::OpenSSL::Bignum objects for n, e, and optionally d, p,
-and q, where p and q are the prime factors of n, e is the public
-exponent and d is the private exponent, create a new
-Crypt::OpenSSL::RSA object using these values.  If p and q are
-provided and d is undef, d is computed.  Note that while p and q are
-not necessary for a private key, their presence will speed up
+Given C<Crypt::OpenSSL::Bignum> objects for C<n>, C<e>, and optionally C<d>,
+C<p>, and C<q>, where C<p> and C<q> are the prime factors of C<n>, C<e> is
+the public exponent and C<d> is the private exponent, create a new
+C<Crypt::OpenSSL::RSA> object using these values.  If C<p> and C<q> are
+provided and C<d> is C<undef>, C<d> is computed.  Note that while C<p> and
+C<q> are not necessary for a private key, their presence will speed up
 computation.
 
 =cut
@@ -133,7 +133,7 @@ sub new_key_from_parameters
 
 =item import_random_seed
 
-Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
+Import a random seed from C<Crypt::OpenSSL::Random>, since the OpenSSL
 libraries won't allow sharing of random structures across perl XS
 modules.
 
@@ -180,7 +180,12 @@ and is the format that is produced by running C<openssl rsa -pubout>.
 
 =item get_private_key_string
 
-Return the DER-encoded PKCS1 representation of the private key.
+Return the Base64/DER-encoded PKCS1 representation of the private
+key.  This string has
+header and footer lines:
+
+  -----BEGIN RSA PRIVATE KEY------
+  -----END RSA PRIVATE KEY------
 
 =item encrypt
 
@@ -223,7 +228,7 @@ of padding.
 Use EME-OAEP padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
 an empty encoding parameter. This mode of padding is recommended for
 all new applications.  It is the default mode used by
-Crypt::OpenSSL::RSA.
+C<Crypt::OpenSSL::RSA>.
 
 =item use_sslv23_padding
 
@@ -279,12 +284,12 @@ is valid, and a false value otherwise.  Croaks if the key is public only.
 
 =item get_key_parameters
 
-Return Crypt::OpenSSL::Bignum objects representing the values of n, e,
-d, p, q, d mod (p-1), d mod (q-1), and 1/q mod p, where p and q are
-the prime factors of n, e is the public exponent and d is the private
-exponent.  Some of these values may return as undef; only n and e will
-be defined for a public key.  The Crypt::OpenSSL::Bignum module must
-be installed for this to work.
+Return C<Crypt::OpenSSL::Bignum> objects representing the values of C<n>,
+C<e>, C<d>, C<p>, C<q>, C<d mod (p-1)>, C<d mod (q-1)>, and C<1/q mod p>,
+where C<p> and C<q> are the prime factors of C<n>, C<e> is the public
+exponent and C<d> is the private exponent.  Some of these values may return
+as C<undef>; only C<n> and C<e> will be defined for a public key.  The
+C<Crypt::OpenSSL::Bignum> module must be installed for this to work.
 
 =item is_private
 
@@ -306,8 +311,16 @@ There is a small memory leak when generating new keys of more than 512 bits.
 
 =head1 AUTHOR
 
-Ian Robertson, iroberts@cpan.org.  For support, please email
-perl-openssl-users@lists.sourceforge.net.
+Ian Robertson, C<iroberts@cpan.org>.  For support, please email
+C<perl-openssl-users@lists.sourceforge.net>.
+
+=head1 ACKNOWLEDGEMENTS
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (c) 2001-2011 Ian Robertson.  Crypt::OpenSSL::RSA is free
+software; you may redistribute it and/or modify it under the same
+terms as Perl itself.
 
 =head1 SEE ALSO
 
