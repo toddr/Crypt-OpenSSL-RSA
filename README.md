@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/toddr/Crypt-OpenSSL-RSA.png?branch=master)](https://travis-ci.org/toddr/Crypt-OpenSSL-RSA)
+
 # NAME
 
 Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
