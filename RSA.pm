@@ -8,18 +8,13 @@ use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 require DynaLoader;
 use AutoLoader 'AUTOLOAD';
 
-use base /DynaLoader/;
-
-use strict;
-use warnings;
+@ISA = qw(DynaLoader);
 
 $VERSION = '0.29';
 
 bootstrap Crypt::OpenSSL::RSA $VERSION;
 
-BEGIN { 
-  eval { require Crypt::OpenSSL::Bignum; 1;} or 1;
-}
+BEGIN { eval { require Crypt::OpenSSL::Bignum; }; }
 
 1;
 
