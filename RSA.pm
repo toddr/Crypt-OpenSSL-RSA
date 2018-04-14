@@ -13,7 +13,7 @@ use AutoLoader 'AUTOLOAD';
 use XSLoader;
 XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
-BEGIN { eval { use Crypt::OpenSSL::Bignum () } }   ## no critic qw(RequireCheckingReturnValueOfEval);
+BEGIN { eval { require Crypt::OpenSSL::Bignum } }   ## no critic qw(RequireCheckingReturnValueOfEval);
 
 1;
 
