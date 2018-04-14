@@ -1,10 +1,13 @@
 Changes
+hints/MSWin32.pl
 LICENSE
+Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 META.json
 META.yml
-Makefile.PL
 README
+README.md
 RSA.pm
 RSA.xs
 t/bignum.t
