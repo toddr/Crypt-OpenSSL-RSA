@@ -1,8 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
-0.29  Wed Apr 4 2018 - Moritz Onken (PERLER)
+0.29  Fri Apr 13 2018
         - Adapt to OpenSSL 1.1.0 (dur-randir)
         - Move issue tracker to github.
+        - Modernization as in Crypt::OpenSSL::Random.
+        - better MSWin32 hints, fixes MSVC libraries,
+        - more meta tests,
 
 0.28  Thu Aug 25 2011 - Moritz Onken (PERLER)
         - RT 56454 - Win32 compatibility patch (kmx@cpan.org)

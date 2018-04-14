@@ -3,19 +3,9 @@ use Test::More;
 
 use Crypt::OpenSSL::RSA;
 
-my $bignum_missing;
-
-BEGIN
-{
-    # FIXME - add version requirement
-    eval { require Crypt::OpenSSL::Bignum; };
-    $bignum_missing = $@;
-    #rypt::OpenSSL::Bignum;
-
-    $bignum_missing
-        ? plan(skip_all => "Crypt::OpenSSL::Bignum required for bignum tests")
-        : plan(tests => 64);
-}
+$INC{'Crypt/OpenSSL/Bignum.pm'}
+    ? plan(skip_all => "Crypt::OpenSSL::Bignum required for bignum tests")
+    : plan(tests => 64);
 
 sub check_datum
 {
@@ -41,7 +31,6 @@ sub check_key_parameters # runs 8 tests
     check_datum($iqmp, $riqmp);
 }
 
-unless ($bignum_missing)
 {
     my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
     my $one = Crypt::OpenSSL::Bignum->one();

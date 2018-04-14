@@ -26,7 +26,7 @@ before_install:
   - build-dist
   - cd $BUILD_DIR
 install:
-  - export AUTOMATED_TESTING=1 HARNESS_TIMER=1 AUTHOR_TESTING=0 RELEASE_TESTING=0
+  - export AUTOMATED_TESTING=1 HARNESS_TIMER=1 AUTHOR_TESTING=1 RELEASE_TESTING=1
   - cpanm --notest Crypt::OpenSSL::Guess
   - cpanm --notest Crypt::OpenSSL::Random
   - cpanm --installdeps --notest .
