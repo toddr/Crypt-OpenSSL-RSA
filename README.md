@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/toddr/Crypt-OpenSSL-RSA.png?branch=master)](https://travis-ci.org/toddr/Crypt-OpenSSL-RSA)
-
 # NAME
 
 Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
@@ -34,11 +32,11 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
 
 # DESCRIPTION
 
-Crypt::OpenSSL::RSA provides the ability to RSA encrypt strings which are
+`Crypt::OpenSSL::RSA` provides the ability to RSA encrypt strings which are
 somewhat shorter than the block size of a key.  It also allows for decryption,
 signatures and signature verification.
 
-_NOTE_: Many of the methods in this package can croak, so use eval, or
+_NOTE_: Many of the methods in this package can croak, so use `eval`, or
 Error.pm's try/catch mechanism to capture errors.  Also, while some
 methods from earlier versions of this package return true on success,
 this (never documented) behavior is no longer the case.
@@ -47,43 +45,43 @@ this (never documented) behavior is no longer the case.
 
 - new\_public\_key
 
-    Create a new Crypt::OpenSSL::RSA object by loading a public key in
+    Create a new `Crypt::OpenSSL::RSA` object by loading a public key in
     from a string containing Base64/DER-encoding of either the PKCS1 or
     X.509 representation of the key.  The string should include the
-    \-----BEGIN...----- and -----END...----- lines.
+    `-----BEGIN...-----` and `-----END...-----` lines.
 
     The padding is set to PKCS1\_OAEP, but can be changed with the
-    use\_xxx\_padding methods
+    `use_xxx_padding` methods.
 
 - new\_private\_key
 
-    Create a new Crypt::OpenSSL::RSA object by loading a private key in
+    Create a new `Crypt::OpenSSL::RSA` object by loading a private key in
     from an string containing the Base64/DER encoding of the PKCS1
     representation of the key.  The string should include the
-    \-----BEGIN...----- and -----END...----- lines.  The padding is set to
-    PKCS1\_OAEP, but can be changed with use\_xxx\_padding.
+    `-----BEGIN...-----` and `-----END...-----` lines.  The padding is set to
+    PKCS1\_OAEP, but can be changed with `use_xxx_padding`.
 
 - generate\_key
 
-    Create a new Crypt::OpenSSL::RSA object by constructing a
+    Create a new `Crypt::OpenSSL::RSA` object by constructing a
     private/public key pair.  The first (mandatory) argument is the key
     size, while the second optional argument specifies the public exponent
     (the default public exponent is 65537).  The padding is set to
-    PKCS1\_OAEP, but can be changed with use\_xxx\_padding methods.
+    PKCS1\_OAEP, but can be changed with `use_xxx_padding` methods.
 
 - new\_key\_from\_parameters
 
-    Given Crypt::OpenSSL::Bignum objects for n, e, and optionally d, p,
-    and q, where p and q are the prime factors of n, e is the public
-    exponent and d is the private exponent, create a new
-    Crypt::OpenSSL::RSA object using these values.  If p and q are
-    provided and d is undef, d is computed.  Note that while p and q are
-    not necessary for a private key, their presence will speed up
+    Given `Crypt::OpenSSL::Bignum` objects for `n`, `e`, and optionally `d`,
+    `p`, and `q`, where `p` and `q` are the prime factors of `n`, `e` is
+    the public exponent and `d` is the private exponent, create a new
+    `Crypt::OpenSSL::RSA` object using these values.  If `p` and `q` are
+    provided and `d` is `undef`, `d` is computed.  Note that while `p` and
+    `q` are not necessary for a private key, their presence will speed up
     computation.
 
 - import\_random\_seed
 
-    Import a random seed from Crypt::OpenSSL::Random, since the OpenSSL
+    Import a random seed from `Crypt::OpenSSL::Random`, since the OpenSSL
     libraries won't allow sharing of random structures across perl XS
     modules.
 
@@ -116,7 +114,12 @@ this (never documented) behavior is no longer the case.
 
 - get\_private\_key\_string
 
-    Return the DER-encoded PKCS1 representation of the private key.
+    Return the Base64/DER-encoded PKCS1 representation of the private
+    key.  This string has
+    header and footer lines:
+
+        -----BEGIN RSA PRIVATE KEY------
+        -----END RSA PRIVATE KEY------
 
 - encrypt
 
@@ -159,7 +162,7 @@ this (never documented) behavior is no longer the case.
     Use EME-OAEP padding as defined in PKCS #1 v2.0 with SHA-1, MGF1 and
     an empty encoding parameter. This mode of padding is recommended for
     all new applications.  It is the default mode used by
-    Crypt::OpenSSL::RSA.
+    `Crypt::OpenSSL::RSA`.
 
 - use\_sslv23\_padding
 
@@ -211,12 +214,12 @@ this (never documented) behavior is no longer the case.
 
 - get\_key\_parameters
 
-    Return Crypt::OpenSSL::Bignum objects representing the values of n, e,
-    d, p, q, d mod (p-1), d mod (q-1), and 1/q mod p, where p and q are
-    the prime factors of n, e is the public exponent and d is the private
-    exponent.  Some of these values may return as undef; only n and e will
-    be defined for a public key.  The Crypt::OpenSSL::Bignum module must
-    be installed for this to work.
+    Return `Crypt::OpenSSL::Bignum` objects representing the values of `n`,
+    `e`, `d`, `p`, `q`, `d mod (p-1)`, `d mod (q-1)`, and `1/q mod p`,
+    where `p` and `q` are the prime factors of `n`, `e` is the public
+    exponent and `d` is the private exponent.  Some of these values may return
+    as `undef`; only `n` and `e` will be defined for a public key.  The
+    `Crypt::OpenSSL::Bignum` module must be installed for this to work.
 
 - is\_private
 
@@ -228,8 +231,16 @@ There is a small memory leak when generating new keys of more than 512 bits.
 
 # AUTHOR
 
-Ian Robertson, iroberts@cpan.org.  For support, please email
-perl-openssl-users@lists.sourceforge.net.
+Ian Robertson, `iroberts@cpan.org`.  For support, please email
+`perl-openssl-users@lists.sourceforge.net`.
+
+# ACKNOWLEDGEMENTS
+
+# LICENSE
+
+Copyright (c) 2001-2011 Ian Robertson.  Crypt::OpenSSL::RSA is free
+software; you may redistribute it and/or modify it under the same
+terms as Perl itself.
 
 # SEE ALSO
 

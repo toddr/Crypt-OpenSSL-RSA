@@ -315,7 +315,7 @@ C<perl-openssl-users@lists.sourceforge.net>.
 
 =head1 ACKNOWLEDGEMENTS
 
-=head1 COPYRIGHT & LICENSE
+=head1 LICENSE
 
 Copyright (c) 2001-2011 Ian Robertson.  Crypt::OpenSSL::RSA is free
 software; you may redistribute it and/or modify it under the same
