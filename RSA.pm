@@ -3,7 +3,7 @@ package Crypt::OpenSSL::RSA;
 use strict;
 use warnings;
 
-use Carp; # Removing carp will break the XS code.
+use Carp;    # Removing carp will break the XS code.
 
 our $VERSION = '0.29_01';
 
@@ -13,7 +13,9 @@ use AutoLoader 'AUTOLOAD';
 use XSLoader;
 XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
-BEGIN { eval { require Crypt::OpenSSL::Bignum } }   ## no critic qw(RequireCheckingReturnValueOfEval);
+BEGIN {
+    eval { require Crypt::OpenSSL::Bignum };
+}            ## no critic qw(RequireCheckingReturnValueOfEval);
 
 1;
 
@@ -77,20 +79,15 @@ The padding is set to PKCS1_OAEP, but can be changed with the
 C<use_xxx_padding> methods.
 
 =cut
-
-sub new_public_key
-{
-    my ($proto, $p_key_string) = @_;
-    if ($p_key_string =~ /^-----BEGIN RSA PUBLIC KEY-----/)
-    {
+sub new_public_key {
+    my ( $proto, $p_key_string ) = @_;
+    if ( $p_key_string =~ /^-----BEGIN RSA PUBLIC KEY-----/ ) {
         return $proto->_new_public_key_pkcs1($p_key_string);
     }
-    elsif ($p_key_string =~ /^-----BEGIN PUBLIC KEY-----/)
-    {
+    elsif ( $p_key_string =~ /^-----BEGIN PUBLIC KEY-----/ ) {
         return $proto->_new_public_key_x509($p_key_string);
     }
-    else
-    {
+    else {
         croak "unrecognized key format";
     }
 }
@@ -122,12 +119,9 @@ C<q> are not necessary for a private key, their presence will speed up
 computation.
 
 =cut
-
-sub new_key_from_parameters
-{
-    my($proto, $n, $e, $d, $p, $q) = @_;
-    return $proto->_new_key_from_parameters
-        (map { $_ ? $_->pointer_copy() : 0 } $n, $e, $d, $p, $q);
+sub new_key_from_parameters {
+    my ( $proto, $n, $e, $d, $p, $q ) = @_;
+    return $proto->_new_key_from_parameters( map { $_ ? $_->pointer_copy() : 0 } $n, $e, $d, $p, $q );
 }
 
 =item import_random_seed
@@ -137,12 +131,9 @@ libraries won't allow sharing of random structures across perl XS
 modules.
 
 =cut
-
-sub import_random_seed
-{
-    until (_random_status())
-    {
-        _random_seed(Crypt::OpenSSL::Random::random_bytes(20));
+sub import_random_seed {
+    until ( _random_status() ) {
+        _random_seed( Crypt::OpenSSL::Random::random_bytes(20) );
     }
 }
 
@@ -295,11 +286,8 @@ C<Crypt::OpenSSL::Bignum> module must be installed for this to work.
 Return true if this is a private key, and false if it is private only.
 
 =cut
-
-sub get_key_parameters
-{
-    return map { $_ ? Crypt::OpenSSL::Bignum->bless_pointer($_) : undef }
-        shift->_get_key_parameters();
+sub get_key_parameters {
+    return map { $_ ? Crypt::OpenSSL::Bignum->bless_pointer($_) : undef } shift->_get_key_parameters();
 }
 
 =back
