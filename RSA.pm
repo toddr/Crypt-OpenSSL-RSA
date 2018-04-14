@@ -1,7 +1,7 @@
 package Crypt::OpenSSL::RSA;
 
 use strict;
-use Carp;
+use warnings;
 
 use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
