@@ -38,9 +38,11 @@ WriteMakefile(
                 recommends => {
                     'Crypt::OpenSSL::Bignum' => 0,
                 },
-                build_requires => {
-                    'Test'                  => 0,    # For testing
+                configure_requires => {
                     'Crypt::OpenSSL::Guess' => 0,
+                },
+                build_requires => {
+                    'Test' => 0,    # For testing
                 },
                 resources => {
                     'license'    => 'http://dev.perl.org/licenses/',
