@@ -22,13 +22,13 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Crypt::OpenSSL::Guess" : "0",
             "ExtUtils::MakeMaker" : "0",
             "Test" : "0"
          }
       },
       "configure" : {
          "requires" : {
+            "Crypt::OpenSSL::Guess" : "0",
             "ExtUtils::MakeMaker" : "0"
          }
       },
@@ -56,6 +56,6 @@
          "url" : "http://github.com/toddr/Crypt-OpenSSL-RSA"
       }
    },
-   "version" : "0.29_01",
+   "version" : "0.29_02",
    "x_serialization_backend" : "JSON::PP version 2.27400_02"
 }

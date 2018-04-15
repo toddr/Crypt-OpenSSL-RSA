@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.29_02  Sun Apr 15 2018
+        - Add missing require of Config::OpenSSL::Guess
+
 0.29_01  Fri Apr 13 2018
         - Adapt to OpenSSL 1.1.0 (dur-randir)
         - Move issue tracker to github.
