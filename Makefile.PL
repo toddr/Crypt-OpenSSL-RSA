@@ -39,7 +39,7 @@ WriteMakefile(
                     'Crypt::OpenSSL::Bignum' => 0,
                 },
                 configure_requires => {
-                    'Crypt::OpenSSL::Guess' => '0.10',
+                    'Crypt::OpenSSL::Guess' => '0.11',
                 },
                 build_requires => {
                     'Test' => 0,    # For testing
