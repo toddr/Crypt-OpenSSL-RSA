@@ -3,6 +3,8 @@ Revision history for Perl extension Crypt::OpenSSL::RSA.
 0.29_03  Mon Apr 16 2018
         - Add whirlpool hash support.
         - Crypt::OpenSSL::Random is now required at comnpile-time.
+        - Use the new interface to RSA_generate_key if available
+        - Add library paths to LIBS from Crypt::OpenSSL::Guess
 
 0.29_02  Sun Apr 15 2018
         - Add missing require of Config::OpenSSL::Guess
