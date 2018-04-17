@@ -50,7 +50,7 @@ void croakSsl(char* p_file, int p_line)
 char _is_private(rsaData* p_rsa)
 {
     const BIGNUM *d;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
     d = p_rsa->rsa->d;
 #else
     RSA_get0_key(p_rsa->rsa, NULL, NULL, &d);
@@ -361,7 +361,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         croak("At least a modulus and public key must be provided");
     }
     CHECK_OPEN_SSL(rsa = RSA_new());
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
     rsa->n = n;
     rsa->e = e;
 #endif
@@ -379,7 +379,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
             q = BN_new();
             THROW(BN_div(q, NULL, n, p, ctx));
         }
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
         rsa->p = p;
         rsa->q = q;
 #else
@@ -395,7 +395,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
             THROW(BN_mul(d, p_minus_1, q_minus_1, ctx));
             THROW(BN_mod_inverse(d, e, d, ctx));
         }
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
         rsa->d = d;
 #else
         THROW(RSA_set0_key(rsa, n, e, d));
@@ -406,7 +406,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         THROW(BN_mod(dmq1, d, q_minus_1, ctx));
         THROW(iqmp = BN_new());
         THROW(BN_mod_inverse(iqmp, q, p, ctx));
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
         rsa->dmp1 = dmp1;
         rsa->dmq1 = dmq1;
         rsa->iqmp = iqmp;
@@ -430,7 +430,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
     }
     else
     {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
         rsa->d = d;
 #else
         CHECK_OPEN_SSL(RSA_set0_key(rsa, n, e, d));
@@ -457,7 +457,7 @@ PPCODE:
 {
     RSA* rsa;
     rsa = p_rsa->rsa;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
     n = rsa->n;
     e = rsa->e;
     d = rsa->d;
