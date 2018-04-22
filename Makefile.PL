@@ -22,7 +22,7 @@ WriteMakefile(
         'Test::More'             => 0,
     },
     'OBJECT' => 'RSA.o',
-    'LIBS'   => ( $^O eq 'MSWin32' ) ? [openssl_lib_paths() . ' -lssl32 -leay32'] : [openssl_lib_paths() . ' -lssl -lcrypto'],
+    'LIBS'   => [openssl_lib_paths() . ' -lssl -lcrypto'],
     'DEFINE' => '-DPERL5 -DOPENSSL_NO_KRB5',
 
     # perl-5.8/gcc-3.2 needs -DPERL5, and redhat9 likes -DOPENSSL_NO_KRB5
