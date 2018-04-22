@@ -8,8 +8,6 @@ use Crypt::OpenSSL::Guess qw(openssl_inc_paths openssl_lib_paths);
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
-print  "LIBS => [" . openssl_lib_paths() . " -lssl -lcrypto\n";
-
 WriteMakefile(
     'NAME'             => 'Crypt::OpenSSL::RSA',
     AUTHOR             => 'Ian Robertson <iroberts@cpan.org>',
