@@ -3,7 +3,6 @@ shallow_clone: true
 
 environment:
   matrix:
-    - perl_type: system
     - perl_type: cygwin
     - perl_type: strawberry
     - perl_type: strawberry
