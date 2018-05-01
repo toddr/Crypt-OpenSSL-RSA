@@ -1,5 +1,10 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.30 Tue May 1 2018
+        - Working windows library detection
+        - Actively testing on appveyor for windows now.
+        - work correctly on LibreSSL
+
 0.29_03  Mon Apr 16 2018
         - Add whirlpool hash support.
         - Crypt::OpenSSL::Random is now required at comnpile-time.
