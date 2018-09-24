@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.32 ??
+    - Prefix internal bn2sv function so it doesn't collide with Net::SSLeay
+
 0.31 Mon Sep 24 2018
     - Remove default of SHA256 for RSA keys. This has caused significant
       problems with downstream modules and it has always been possible to
