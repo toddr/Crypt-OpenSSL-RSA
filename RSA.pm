@@ -14,8 +14,11 @@ use XSLoader;
 XSLoader::load 'Crypt::OpenSSL::RSA', $VERSION;
 
 BEGIN {
-    eval { require Crypt::OpenSSL::Bignum };
-}            ## no critic qw(RequireCheckingReturnValueOfEval);
+    eval {
+        local $SIG{__DIE__};    # prevent outer handlers from being called
+        require Crypt::OpenSSL::Bignum;
+    };
+}    ## no critic qw(RequireCheckingReturnValueOfEval);
 
 1;
 
