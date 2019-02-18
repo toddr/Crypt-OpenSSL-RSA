@@ -11,5 +11,3 @@ require Crypt::OpenSSL::RSA;
 plan tests => 1;
 
 ok !$handler_called, 'outer $SIG{__DIE__} handler not called';
-
-done_testing;
