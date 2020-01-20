@@ -31,7 +31,9 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: Deps for testing
-        run: cpanm --notest Crypt::OpenSSL::Random Crypt::OpenSSL::Guess Test::Kwalitee Test::CPAN::Meta Perl::MinimumVersion Test::Pod::Coverage Test::Pod Test::MinimumVersion Crypt::OpenSSL::Bignum
+        run: cpanm --notest Crypt::OpenSSL::Random Crypt::OpenSSL::Guess Test::Kwalitee Test::CPAN::Meta Perl::MinimumVersion Test::Pod::Coverage Test::Pod Test::MinimumVersion Crypt::OpenSSL::Bignum || /bin/true
+      - name: Deps for testing
+        run: cpanm --notest Crypt::OpenSSL::Random Crypt::OpenSSL::Guess Test::Kwalitee Test::CPAN::Meta Perl::MinimumVersion Test::Pod::Coverage Test::Pod Test::MinimumVersion Crypt::OpenSSL::Bignum      
       - name: Makefile.PL
         run: perl Makefile.PL
       - name: make test
