@@ -706,7 +706,7 @@ PPCODE:
                       p_rsa->rsa))
     {
         case 0:
-            CHECK_OPEN_SSL(ERR_peek_error());
+            ERR_clear_error();
             XSRETURN_NO;
             break;
         case 1:
