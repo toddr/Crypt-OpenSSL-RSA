@@ -640,11 +640,15 @@ use_pkcs1_oaep_padding(p_rsa)
   CODE:
     p_rsa->padding = RSA_PKCS1_OAEP_PADDING;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+
 void
 use_sslv23_padding(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->padding = RSA_SSLV23_PADDING;
+
+#endif
 
 # Sign text. Returns the signature.
 
