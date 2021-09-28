@@ -37,7 +37,6 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
   Crypt::OpenSSL::Random::random_seed($good_entropy);
   Crypt::OpenSSL::RSA->import_random_seed();
   $rsa_pub = Crypt::OpenSSL::RSA->new_public_key($key_string);
-  $rsa_pub->use_sslv23_padding(); # use_pkcs1_oaep_padding is the default
   $ciphertext = $rsa->encrypt($plaintext);
 
   $rsa_priv = Crypt::OpenSSL::RSA->new_private_key($key_string);
@@ -227,6 +226,8 @@ C<Crypt::OpenSSL::RSA>.
 
 Use C<PKCS #1 v1.5> padding with an SSL-specific modification that
 denotes that the server is SSL3 capable.
+
+Not available since OpenSSL 3.
 
 =item use_md5_hash
 
