@@ -103,6 +103,16 @@ representation of the key.  The string should include the
 C<-----BEGIN...-----> and C<-----END...-----> lines.  The padding is set to
 PKCS1_OAEP, but can be changed with C<use_xxx_padding>.
 
+An optional parameter can be passed for passphase protected private key:
+
+=over
+
+=item passphase
+
+The passphase which protects the private key.
+
+=back
+
 =item generate_key
 
 Create a new C<Crypt::OpenSSL::RSA> object by constructing a
@@ -179,6 +189,22 @@ header and footer lines:
 
   -----BEGIN RSA PRIVATE KEY------
   -----END RSA PRIVATE KEY------
+
+2 optional parameters can be passed for passphase protected private key
+string:
+
+=over
+
+=item passphase
+
+The passphase which protects the private key.
+
+=item cipher name
+
+The cipher algorithm used to protect the private key. Default to
+'des3'.
+
+=back
 
 =item encrypt
 
@@ -324,11 +350,11 @@ terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<perl(1)>, L<Crypt::OpenSSL::Random>, L<Crypt::OpenSSL::Bignum>, 
-L<rsa(3)>, L<RSA_new(3)|http://man.he.net/?topic=RSA_new&section=3>, 
-L<RSA_public_encrypt(3)|http://man.he.net/?topic=RSA_public_encrypt&section=3>, 
+L<perl(1)>, L<Crypt::OpenSSL::Random>, L<Crypt::OpenSSL::Bignum>,
+L<rsa(3)>, L<RSA_new(3)|http://man.he.net/?topic=RSA_new&section=3>,
+L<RSA_public_encrypt(3)|http://man.he.net/?topic=RSA_public_encrypt&section=3>,
 L<RSA_size(3)|http://man.he.net/?topic=RSA_size&section=3>,
-L<RSA_generate_key(3)|http://man.he.net/?topic=RSA_generate_key&section=3>, 
+L<RSA_generate_key(3)|http://man.he.net/?topic=RSA_generate_key&section=3>,
 L<RSA_check_key(3)|http://man.he.net/?topic=RSA_check_key&section=3>
 
 =cut
