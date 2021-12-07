@@ -234,7 +234,14 @@ MODULE = Crypt::OpenSSL::RSA		PACKAGE = Crypt::OpenSSL::RSA
 PROTOTYPES: DISABLE
 
 BOOT:
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    # might introduce memory leak without calling EVP_cleanup() on exit
+    # see https://wiki.openssl.org/index.php/Library_Initialization
     ERR_load_crypto_strings();
+    OpenSSL_add_all_algorithms();
+#else
+    # NOOP
+#endif
 
 SV*
 new_private_key(proto, key_string_SV, passphase_SV=&PL_sv_undef)
