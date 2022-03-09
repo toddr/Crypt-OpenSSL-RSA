@@ -10,7 +10,7 @@ use Crypt::OpenSSL::Guess qw(openssl_inc_paths openssl_lib_paths);
 
 WriteMakefile(
     'NAME'             => 'Crypt::OpenSSL::RSA',
-    AUTHOR             => 'Ian Robertson <iroberts@cpan.org>',
+    'AUTHOR'           => 'Ian Robertson <iroberts@cpan.org>',
     'VERSION_FROM'     => 'RSA.pm',                              # finds $VERSION
     'DISTNAME'         => 'Crypt-OpenSSL-RSA',
     'ABSTRACT_FROM'    => 'RSA.pm',
@@ -48,4 +48,3 @@ WriteMakefile(
         }
     }
 );
-
