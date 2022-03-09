@@ -30,7 +30,6 @@ WriteMakefile(
 
     'dist'  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     'clean' => { FILES    => 'Crypt-OpenSSL-RSA-*' },
-    ( $ExtUtils::MakeMaker::VERSION >= 6.3002 ? ( 'LICENSE' => 'perl', ) : () ),
     (
         $ExtUtils::MakeMaker::VERSION >= 6.46
         ? (
