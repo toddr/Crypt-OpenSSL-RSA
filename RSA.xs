@@ -294,7 +294,7 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
     const EVP_CIPHER* enc = NULL;
   CODE:
     if (SvPOK(cipher_name_SV) && !SvPOK(passphase_SV)) {
-        croak("Both passphase and cipher name are required");
+        croak("Passphrase is required for cipher");
     }
     if (SvPOK(passphase_SV)) {
         passphase = SvPV(passphase_SV, passphaseLength);
