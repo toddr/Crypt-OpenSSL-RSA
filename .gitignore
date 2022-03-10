@@ -18,3 +18,4 @@
 *.gcov
 *.gcda
 *.gcno
+*.ERR
