@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::RSA.
 
+0.33 ??
+    - Update for windows github CI
+
 0.32 Wed Sep 8 2021
     - Prefix internal bn2sv function so it doesn't collide with Net::SSLeay
     - Ensure that verify() leaves openssl error stack clean on failure
