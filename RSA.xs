@@ -15,22 +15,49 @@
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
 
+#define OLD_CRUFTY_SSL_VERSION (OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x03050000fL))
+#define USE_OPENSSL_V3 (OPENSSL_VERSION_NUMBER > 0x30000000L)
+
+#if USE_OPENSSL_V3
+#include <openssl/core_names.h>
+#define OPENSSL_API_COMPAT 0x10100000L
+#endif
+
+
 typedef struct
 {
-    RSA* rsa;
+#if USE_OPENSSL_V3
+    EVP_PKEY_CTX  *ctx;
+    EVP_PKEY      *pkey;
+#endif
+    RSA* rsa; /* FIXME: need to be disabled with v3 */
+
     int padding;
     int hashMode;
 } rsaData;
 
 /* Key names for the rsa hash structure */
 
-#define KEY_KEY "_Key"
+#define KEY_KEY     "_Key"
 #define PADDING_KEY "_Padding"
-#define HASH_KEY "_Hash_Mode"
+#define HASH_KEY    "_Hash_Mode"
 
 #define PACKAGE_NAME "Crypt::OpenSSL::RSA"
 
-#define OLD_CRUFTY_SSL_VERSION (OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x03050000fL))
+/*
+* Migration Guide: https://www.openssl.org/docs/manmaster/man7/migration_guide.html
+*
+*
+* void RSA_get0_key(const RSA *r,
+*                   const BIGNUM **n, const BIGNUM **e, const BIGNUM **d);
+* ->  int EVP_PKEY_get_bn_param(const EVP_PKEY *pkey, const char *key_name,
+*                           BIGNUM **bn);
+* https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_get_bn_param.html
+*
+* RSA_size -> EVP_PKEY_get_size
+*   * https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_get_size.html
+*
+*/
 
 void croakSsl(char* p_file, int p_line)
 {
@@ -50,10 +77,12 @@ void croakSsl(char* p_file, int p_line)
 
 #define THROW(p_result) if (!(p_result)) { error = 1; goto err; }
 
-char _is_private(rsaData* p_rsa)
+char _is_private(const rsaData* p_rsa)
 {
     const BIGNUM *d;
-#if OLD_CRUFTY_SSL_VERSION
+#if USE_OPENSSL_V3
+    EVP_PKEY_get_bn_param(p_rsa->rsa, OSSL_PKEY_PARAM_PRIV_KEY, &d);
+#elif OLD_CRUFTY_SSL_VERSION
     d = p_rsa->rsa->d;
 #else
     RSA_get0_key(p_rsa->rsa, NULL, NULL, &d);
@@ -73,6 +102,22 @@ SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
         newRV_noinc(newSViv((IV) rsa)),
         (SvROK(p_proto) ? SvSTASH(SvRV(p_proto)) : gv_stashsv(p_proto, 1)));
 }
+
+/* FIXME: we only need one flavor for v3 */
+#if USE_OPENSSL_V3
+SV* make_rsa_ctx_obj(SV* p_proto, EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
+{
+    rsaData* rsa;
+
+    CHECK_NEW(rsa, 1, rsaData);
+    rsa->ctx  = ctx;
+    rsa->pkey = pkey;
+
+    return sv_bless(
+        newRV_noinc(newSViv((IV) rsa)),
+        (SvROK(p_proto) ? SvSTASH(SvRV(p_proto)) : gv_stashsv(p_proto, 1)));
+}
+#endif
 
 int get_digest_length(int hash_method)
 {
@@ -280,7 +325,12 @@ void
 DESTROY(p_rsa)
     rsaData* p_rsa;
   CODE:
-    RSA_free(p_rsa->rsa);
+#if USE_OPENSSL_V3
+    if (p_rsa->pkey) EVP_PKEY_free(p_rsa->pkey);
+    if (p_rsa->ctx)  EVP_PKEY_CTX_free(p_rsa->ctx);
+#else
+    if (p_rsa->rsa) RSA_free(p_rsa->rsa);
+#endif
     Safefree(p_rsa);
 
 SV*
@@ -294,6 +344,7 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
     STRLEN passphaseLength = 0;
     char* cipher_name;
     const EVP_CIPHER* enc = NULL;
+    RSA *rsa=NULL;
   CODE:
     if (SvPOK(cipher_name_SV) && !SvPOK(passphase_SV)) {
         croak("Passphrase is required for cipher");
@@ -311,10 +362,14 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
             croak("Unsupported cipher: %s", cipher_name);
         }
     }
-
+#if USE_OPENSSL_V3
+    rsa = EVP_PKEY_get0_RSA(p_rsa->pkey);
+#else
+    rsa = p_rsa->rsa;
+#endif
     CHECK_OPEN_SSL(stringBIO = BIO_new(BIO_s_mem()));
     PEM_write_bio_RSAPrivateKey(
-        stringBIO, p_rsa->rsa, enc, passphase, passphaseLength, NULL, NULL);
+        stringBIO, rsa, enc, passphase, passphaseLength, NULL, NULL);
     RETVAL = extractBioString(stringBIO);
 
   OUTPUT:
@@ -352,9 +407,30 @@ generate_key(proto, bitsSV, exponent = 65537)
     SV* bitsSV;
     unsigned long exponent;
   PREINIT:
+#if USE_OPENSSL_V3
+    EVP_PKEY *pkey = NULL;
+#else
     RSA* rsa;
+#endif
   CODE:
-#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+#if USE_OPENSSL_V3
+    EVP_PKEY_CTX *ctx;
+
+    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    if (!ctx)
+        croak("generate_key error: cannot generate context");
+    if (EVP_PKEY_keygen_init(ctx) <= 0)
+        croak("generate_key error: keygen_init");
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, SvIV(bitsSV)) <= 0)
+        croak("generate_key error: set_rsa_keygen_bits");
+
+    /* Generate key */
+    if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
+        croak("generate_key error: keygen failure");
+
+    RETVAL = make_rsa_ctx_obj(proto, ctx, pkey);
+#else
+#   if OPENSSL_VERSION_NUMBER >= 0x00908000L
     BIGNUM *e;
     int rc;
     e = BN_new();
@@ -364,11 +440,12 @@ generate_key(proto, bitsSV, exponent = 65537)
     BN_free(e);
     e = NULL;
     CHECK_OPEN_SSL(rc != -1);
-#else
+#   else
     rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
-#endif
+#   endif
     CHECK_OPEN_SSL(rsa);
     RETVAL = make_rsa_obj(proto, rsa);
+#endif
   OUTPUT:
     RETVAL
 
@@ -706,6 +783,8 @@ sign(p_rsa, text_SV)
     {
         croak("Public keys cannot sign messages");
     }
+
+    /* OpenSSL 3.0 https://www.openssl.org/docs/manmaster/man3/EVP_PKEY_sign.html */
 
     CHECK_NEW(signature, RSA_size(p_rsa->rsa), char);
 
