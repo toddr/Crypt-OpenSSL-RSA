@@ -301,9 +301,56 @@ new_private_key(proto, key_string_SV, passphase_SV=&PL_sv_undef)
     SV* proto;
     SV* key_string_SV;
     SV* passphase_SV;
+    int rv                 = 0;
+    int selection          = 0;
+    EVP_PKEY *pkey         = NULL;
+    OSSL_DECODER_CTX *dctx = NULL;
   CODE:
-    RETVAL = make_rsa_obj(
-        proto, _load_rsa_key(key_string_SV, PEM_read_bio_RSAPrivateKey, passphase_SV));
+
+    char *key_string = SvPV_nolen(key_string_SV);
+
+    BIO* bio = BIO_new_mem_buf( key_string, -1 );
+
+    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", NULL, "RSA",
+                                         selection,
+                                         NULL, NULL);
+
+    if ( dctx == NULL)
+        goto cleanup;
+
+    if (passphrase != NULL) {
+        if (OSSL_DECODER_CTX_set_passphrase(dctx,
+                                            (const unsigned char *)passphrase,
+                                            strlen(passphrase)) == 0) {
+            goto cleanup;
+        }
+    }
+
+
+    if ( OSSL_DECODER_from_bio( dctx, bio) != 1 )
+        goto cleanup;
+
+    if ( BIO_set_close(bio, BIO_CLOSE) != 1 )
+        goto cleanup;
+
+    rv = 1;
+
+cleanup:
+
+    if (dctx)
+        OSSL_DECODER_CTX_free(dctx);
+
+    if (bio != NULL)
+        BIO_free(bio);
+
+    if ( rv == 0 ) {
+        EVP_PKEY_free(pkey);
+        pkey = NULL
+        croakSsl();
+    }
+
+    /* TODO: Create an object here */
+    RETVAL = newSViv(pkey);
   OUTPUT:
     RETVAL
 
