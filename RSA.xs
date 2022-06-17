@@ -95,6 +95,12 @@ SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
     rsaData* rsa;
 
     CHECK_NEW(rsa, 1, rsaData);
+
+#if USE_OPENSSL_V3
+    rsa->ctx = NULL;
+    rsa->pkey = NULL;
+#endif
+
     rsa->rsa = p_rsa;
     rsa->hashMode = NID_sha1;
     rsa->padding = RSA_PKCS1_OAEP_PADDING;
