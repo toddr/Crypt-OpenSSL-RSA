@@ -1,9 +1,7 @@
 use strict;
-use Test;
-
-use Crypt::OpenSSL::RSA;
-
-BEGIN { plan tests => 19 }
+use warnings;
+use Test::More 'tests' => 22;
+use Crypt::OpenSSL::RSA::FFI;
 
 my $PRIVATE_KEY_STRING = <<EOF;
 -----BEGIN RSA PRIVATE KEY-----
@@ -65,26 +63,92 @@ EOF
 
 my ( $private_key, $public_key, $private_key2 );
 
-ok( $private_key = Crypt::OpenSSL::RSA->new_private_key($PRIVATE_KEY_STRING) );
-ok( $PRIVATE_KEY_STRING eq $private_key->get_private_key_string() );
-ok( $PUBLIC_KEY_PKCS1_STRING eq $private_key->get_public_key_string() );
-ok( $PUBLIC_KEY_X509_STRING eq $private_key->get_public_key_x509_string() );
+ok( $private_key = Crypt::OpenSSL::RSA::FFI->new_private_key($PRIVATE_KEY_STRING) );
+isa_ok( $private_key, 'Crypt::OpenSSL::RSA::FFI' );
+like( $private_key->{'pkey'}, qr/^[0-9]+$/xms, 'pkey created successfully' );
 
-ok( $public_key = Crypt::OpenSSL::RSA->new_public_key($PUBLIC_KEY_PKCS1_STRING) );
-ok( $PUBLIC_KEY_PKCS1_STRING eq $public_key->get_public_key_string() );
-ok( $PUBLIC_KEY_X509_STRING eq $public_key->get_public_key_x509_string() );
+use Test::Differences;
 
-ok( $public_key = Crypt::OpenSSL::RSA->new_public_key($PUBLIC_KEY_X509_STRING) );
-ok( $PUBLIC_KEY_PKCS1_STRING eq $public_key->get_public_key_string() );
-ok( $PUBLIC_KEY_X509_STRING eq $public_key->get_public_key_x509_string() );
+can_ok( $private_key, 'get_private_key_string' );
+is(
+    $private_key->get_private_key_string(),
+    $PRIVATE_KEY_STRING,
+    'Decoded private key back returns same content',
+);
+
+is(
+    $private_key->get_public_key_string(),
+    $PUBLIC_KEY_PKCS1_STRING,
+    'Decoded public key back returns same content',
+);
+
+is(
+    $private_key->get_public_key_x509_string(),
+    $PUBLIC_KEY_X509_STRING,
+    'Decoded public key back in X509 returns same content',
+);
+
+ok(
+    $public_key = Crypt::OpenSSL::RSA::FFI->new_public_key($PUBLIC_KEY_PKCS1_STRING),
+    '->new_public_key(PKCS1_STRING)',
+);
+
+is(
+    $public_key->get_public_key_string(),
+    $PUBLIC_KEY_PKCS1_STRING,
+    'get_public_key_string() works',
+);
+
+is(
+    $public_key->get_public_key_x509_string(),
+    $PUBLIC_KEY_X509_STRING,
+    'get_public_key_x509_string()',
+);
+
+ok(
+    $public_key = Crypt::OpenSSL::RSA::FFI->new_public_key($PUBLIC_KEY_X509_STRING),
+    '->new_public_key(X509_STRING)',
+);
+
+is(
+    $public_key->get_public_key_string(),
+    $PUBLIC_KEY_PKCS1_STRING,
+    '->get_public_key_string()',
+);
+
+is(
+    $public_key->get_public_key_x509_string(),
+    $PUBLIC_KEY_X509_STRING,
+    '->get_public_key_x509_string()',
+);
 
 my $passphase = '123456';
-ok( $private_key = Crypt::OpenSSL::RSA->new_private_key($ENCRYPT_PRIVATE_KEY_STRING, $passphase) );
-ok( $DECRYPT_PRIVATE_KEY_STRING eq $private_key->get_private_key_string() );
-ok( $private_key = Crypt::OpenSSL::RSA->new_private_key($DECRYPT_PRIVATE_KEY_STRING) );
-ok( $private_key2 = Crypt::OpenSSL::RSA->new_private_key($private_key->get_private_key_string($passphase), $passphase) );
+ok(
+    $private_key = Crypt::OpenSSL::RSA::FFI->new_private_key( $ENCRYPT_PRIVATE_KEY_STRING, $passphase ),
+    '->new_private_key() with passphrase',
+);
+
+is(
+    $private_key->get_private_key_string(),
+    $DECRYPT_PRIVATE_KEY_STRING,
+    '->get_private_key_string()',
+);
+
+ok(
+    $private_key = Crypt::OpenSSL::RSA::FFI->new_private_key($DECRYPT_PRIVATE_KEY_STRING),
+    '->new_private_key()',
+);
+
+ok(
+    $private_key2 = Crypt::OpenSSL::RSA::FFI->new_private_key(
+        $private_key->get_private_key_string($passphase),
+        $passphase
+    ),
+    '->new_private_key() with passphrase',
+);
+
 ok( $DECRYPT_PRIVATE_KEY_STRING eq $private_key2->get_private_key_string() );
-ok( $private_key2 = Crypt::OpenSSL::RSA->new_private_key($private_key->get_private_key_string($passphase, 'des3'), $passphase) );
+ok( $private_key2 = Crypt::OpenSSL::RSA::FFI->new_private_key($private_key->get_private_key_string($passphase, 'des3'), $passphase) );
 ok( $DECRYPT_PRIVATE_KEY_STRING eq $private_key2->get_private_key_string() );
-ok( $private_key2 = Crypt::OpenSSL::RSA->new_private_key($private_key->get_private_key_string($passphase, 'aes-128-cbc'), $passphase) );
+ok( $private_key2 = Crypt::OpenSSL::RSA::FFI->new_private_key($private_key->get_private_key_string($passphase, 'aes-128-cbc'), $passphase) );
 ok( $DECRYPT_PRIVATE_KEY_STRING eq $private_key2->get_private_key_string() );
