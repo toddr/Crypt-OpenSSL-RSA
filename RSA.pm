@@ -40,7 +40,7 @@ Crypt::OpenSSL::RSA - RSA encoding and decoding, using the openSSL libraries
   $ciphertext = $rsa->encrypt($plaintext);
 
   $rsa_priv = Crypt::OpenSSL::RSA->new_private_key($key_string);
-  $plaintext = $rsa->encrypt($ciphertext);
+  $plaintext = $rsa->decrypt($ciphertext);
 
   $rsa = Crypt::OpenSSL::RSA->generate_key(1024); # or
   $rsa = Crypt::OpenSSL::RSA->generate_key(1024, $prime);
