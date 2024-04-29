@@ -14,13 +14,29 @@
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+#include <openssl/core_names.h>
+#include <openssl/param_build.h>
+//#include <openssl/decoder.h>
+#endif
 
 typedef struct
 {
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY* rsa;
+#else
     RSA* rsa;
+#endif
     int padding;
     int hashMode;
 } rsaData;
+
+enum {
+    DECRYPT,
+    ENCRYPT,
+    PUBLIC_DECRYPT,
+    PRIVATE_ENCRYPT
+};
 
 /* Key names for the rsa hash structure */
 
@@ -52,16 +68,25 @@ void croakSsl(char* p_file, int p_line)
 
 char _is_private(rsaData* p_rsa)
 {
-    const BIGNUM *d;
 #if OLD_CRUFTY_SSL_VERSION
     d = p_rsa->rsa->d;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    BIGNUM* d = NULL;
+    EVP_PKEY_get_bn_param(p_rsa->rsa, OSSL_PKEY_PARAM_RSA_D, &d);
+#else
+    const BIGNUM* d;
     RSA_get0_key(p_rsa->rsa, NULL, NULL, &d);
+#endif
 #endif
     return(d != NULL);
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+SV* make_rsa_obj(SV* p_proto, EVP_PKEY* p_rsa)
+#else
 SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
+#endif
 {
     rsaData* rsa;
 
@@ -111,6 +136,46 @@ int get_digest_length(int hash_method)
             break;
     }
 }
+
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+EVP_MD *get_md_bynid(int hash_method)
+{
+    switch(hash_method)
+    {
+        case NID_md5:
+            return EVP_MD_fetch(NULL, "md5", NULL);
+            break;
+        case NID_sha1:
+            return EVP_MD_fetch(NULL, "sha1", NULL);
+            break;
+#ifdef SHA512_DIGEST_LENGTH
+        case NID_sha224:
+            return EVP_MD_fetch(NULL, "sha224", NULL);
+            break;
+        case NID_sha256:
+            return EVP_MD_fetch(NULL, "sha256", NULL);
+            break;
+        case NID_sha384:
+            return EVP_MD_fetch(NULL, "sha384", NULL);
+            break;
+        case NID_sha512:
+            return EVP_MD_fetch(NULL, "sha512", NULL);
+            break;
+#endif
+        case NID_ripemd160:
+            return EVP_MD_fetch(NULL, "ripemd160", NULL);
+            break;
+#ifdef WHIRLPOOL_DIGEST_LENGTH
+        case NID_whirlpool:
+            return EVP_MD_fetch(NULL, "whirlpool", NULL);
+            break;
+#endif
+        default:
+            croak("Unknown digest hash mode %u", hash_method);
+            break;
+    }
+}
+#endif
 
 unsigned char* get_message_digest(SV* text_SV, int hash_method)
 {
@@ -176,15 +241,35 @@ SV* extractBioString(BIO* p_stringBio)
     return sv;
 }
 
+int get_key_size(rsaData* p_rsa) {
+    int size = 0;
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    size = EVP_PKEY_get_size(p_rsa->rsa);
+#else
+    size = RSA_size(p_rsa->rsa);
+#endif
+    return size;
+}
+
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+EVP_PKEY* _load_rsa_key(SV* p_keyStringSv,
+                        EVP_PKEY*(*p_loader)(BIO *, EVP_PKEY**, pem_password_cb*, void*),
+                   SV* p_passphaseSv)
+
+#else
 RSA* _load_rsa_key(SV* p_keyStringSv,
                    RSA*(*p_loader)(BIO*, RSA**, pem_password_cb*, void*),
                    SV* p_passphaseSv)
+#endif
 {
     STRLEN keyStringLength;
     char* keyString;
     char* passphase = NULL;
-
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY* rsa;
+#else
     RSA* rsa;
+#endif
     BIO* stringBIO;
 
     keyString = SvPV(p_keyStringSv, keyStringLength);
@@ -204,23 +289,92 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
     return rsa;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
+              int (*p_crypt)(EVP_PKEY_CTX*, unsigned char*, size_t*, const unsigned char*, size_t), int enc)
+#else
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
               int (*p_crypt)(int, const unsigned char*, unsigned char*, RSA*, int))
+#endif
 {
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    STRLEN from_length;
+    size_t to_length;
+#else
     STRLEN from_length;
     int to_length;
+#endif
     int size;
     unsigned char* from;
     char* to;
     SV* sv;
 
     from = (unsigned char*) SvPV(p_from, from_length);
-    size = RSA_size(p_rsa->rsa);
+    size = get_key_size(p_rsa);
     CHECK_NEW(to, size, char);
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *ctx;
 
+    ctx = EVP_PKEY_CTX_new((EVP_PKEY *)p_rsa->rsa, NULL);
+    if (!ctx) {
+        printf("Failed to create ctx\n");
+    }
+            int success;
+    switch (enc) {
+        case DECRYPT:
+            if (EVP_PKEY_decrypt_init(ctx) <= 0) {
+                printf("DECRYPT: Failed to intialize encryption\n");
+            }
+            if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0){
+                printf("DECRYPT: Failed to set padding: %i\n", p_rsa->padding);
+            }
+            if (p_crypt(ctx, NULL, &to_length, from, from_length) <=0)
+                printf("DECRYPT: Failed to determine buffer length\n");
+            if (p_crypt(ctx, to, &to_length, from, from_length) <=0)
+                printf("DECRYPT: Failed to decrypt\n");
+            break;
+        case ENCRYPT:
+            if (EVP_PKEY_encrypt_init(ctx) <= 0) {
+                printf("ENCRYPT: Failed to intialize encryption\n");
+            }
+            if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0){
+                printf("ENCRYPT: Failed to set padding\n");
+            }
+            if (p_crypt(ctx, NULL, &to_length, from, from_length) <=0)
+                printf("ENCRYPT: Failed to determine buffer length\n");
+            if (p_crypt(ctx, to, &to_length, from, from_length) <=0)
+                printf("ENCRYPT: Failed to encrypt\n");
+            break;
+        case PUBLIC_DECRYPT:
+            if (EVP_PKEY_verify_recover_init(ctx) <= 0) {
+                printf("Failed to intialize signature\n");
+            }
+            if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0)
+                  printf("Failed to set the PADDING\n");
+            if (success = p_crypt(ctx, NULL, &to_length, from, from_length) <= 0)
+                  printf("Failed to determine buffer length\n");
+            if ((success = p_crypt(ctx, to, &to_length, from, from_length)) <= 0)
+                 printf("Failed to public decrypt: %i\n", success);
+
+            break;
+        case PRIVATE_ENCRYPT:
+            if (EVP_PKEY_sign_init(ctx) <= 0) {
+                printf("Failed to intialize signature\n");
+            }
+            if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0)
+                  printf("Failed to set the PADDING\n");
+            if ((success = p_crypt(ctx, NULL, &to_length, from, from_length)) <= 0)
+                  printf("Failed to determine buffer length\n");
+            if ((success = p_crypt(ctx, to, &to_length, from, from_length)) <= 0)
+                 printf("Failed to private encrypt %i\n", success);
+            break;
+    }
+
+    EVP_PKEY_CTX_free(ctx);
+#else
     to_length = p_crypt(
        from_length, from, (unsigned char*) to, p_rsa->rsa, p_rsa->padding);
-
+#endif
     if (to_length < 0)
     {
         Safefree(to);
@@ -229,6 +383,20 @@ SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
     sv = newSVpv(to, to_length);
     Safefree(to);
     return sv;
+}
+
+void print_parameter(const EVP_PKEY *pkey, const char *key_name) {
+    BIGNUM *param = NULL;
+    char *str = NULL;
+    if (EVP_PKEY_get_bn_param(pkey, key_name, &param)) {
+        str = BN_bn2dec(param);
+        fprintf(stdout, "%s: %s\n", key_name, str);
+        OPENSSL_free(str);
+        BN_free(param);
+    }
+    else {
+        fprintf(stderr, "Failed to fetch %s\n", key_name);
+    }
 }
 
 
@@ -251,8 +419,13 @@ new_private_key(proto, key_string_SV, passphase_SV=&PL_sv_undef)
     SV* key_string_SV;
     SV* passphase_SV;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = make_rsa_obj(
+        proto, _load_rsa_key(key_string_SV, PEM_read_bio_PrivateKey, passphase_SV));
+#else
     RETVAL = make_rsa_obj(
         proto, _load_rsa_key(key_string_SV, PEM_read_bio_RSAPrivateKey, passphase_SV));
+#endif
   OUTPUT:
     RETVAL
 
@@ -261,8 +434,13 @@ _new_public_key_pkcs1(proto, key_string_SV)
     SV* proto;
     SV* key_string_SV;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = make_rsa_obj(
+        proto, _load_rsa_key(key_string_SV, PEM_read_bio_PUBKEY, &PL_sv_undef));
+#else
     RETVAL = make_rsa_obj(
         proto, _load_rsa_key(key_string_SV, PEM_read_bio_RSAPublicKey, &PL_sv_undef));
+#endif
   OUTPUT:
     RETVAL
 
@@ -271,8 +449,13 @@ _new_public_key_x509(proto, key_string_SV)
     SV* proto;
     SV* key_string_SV;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = make_rsa_obj(
+        proto, _load_rsa_key(key_string_SV, PEM_read_bio_PUBKEY, &PL_sv_undef));
+#else
     RETVAL = make_rsa_obj(
         proto, _load_rsa_key(key_string_SV, PEM_read_bio_RSA_PUBKEY, &PL_sv_undef));
+#endif
   OUTPUT:
     RETVAL
 
@@ -280,7 +463,11 @@ void
 DESTROY(p_rsa)
     rsaData* p_rsa;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_free(p_rsa->rsa);
+#else
     RSA_free(p_rsa->rsa);
+#endif
     Safefree(p_rsa);
 
 SV*
@@ -313,8 +500,14 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
     }
 
     CHECK_OPEN_SSL(stringBIO = BIO_new(BIO_s_mem()));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    PEM_write_bio_PrivateKey_traditional(stringBIO, p_rsa->rsa, enc,
+                             passphase, passphaseLength,
+                             NULL, NULL);
+#else
     PEM_write_bio_RSAPrivateKey(
         stringBIO, p_rsa->rsa, enc, passphase, passphaseLength, NULL, NULL);
+#endif
     RETVAL = extractBioString(stringBIO);
 
   OUTPUT:
@@ -327,7 +520,11 @@ get_public_key_string(p_rsa)
     BIO* stringBIO;
   CODE:
     CHECK_OPEN_SSL(stringBIO = BIO_new(BIO_s_mem()));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    PEM_write_bio_PUBKEY(stringBIO, p_rsa->rsa);
+#else
     PEM_write_bio_RSAPublicKey(stringBIO, p_rsa->rsa);
+#endif
     RETVAL = extractBioString(stringBIO);
 
   OUTPUT:
@@ -340,7 +537,11 @@ get_public_key_x509_string(p_rsa)
     BIO* stringBIO;
   CODE:
     CHECK_OPEN_SSL(stringBIO = BIO_new(BIO_s_mem()));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    PEM_write_bio_PUBKEY(stringBIO, p_rsa->rsa);
+#else
     PEM_write_bio_RSA_PUBKEY(stringBIO, p_rsa->rsa);
+#endif
     RETVAL = extractBioString(stringBIO);
 
   OUTPUT:
@@ -352,20 +553,34 @@ generate_key(proto, bitsSV, exponent = 65537)
     SV* bitsSV;
     unsigned long exponent;
   PREINIT:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *ctx;
+    EVP_PKEY *rsa = NULL;
+#else
     RSA* rsa;
+#endif
   CODE:
 #if OPENSSL_VERSION_NUMBER >= 0x00908000L
-    BIGNUM *e;
-    int rc;
-    e = BN_new();
-    BN_set_word(e, exponent);
-    rsa = RSA_new();
-    rc = RSA_generate_key_ex(rsa, SvIV(bitsSV), e, NULL);
-    BN_free(e);
-    e = NULL;
-    CHECK_OPEN_SSL(rc != -1);
+    //ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+
+    if (!ctx)
+        croak("Unable to create a CTX instance");
+    if (EVP_PKEY_keygen_init(ctx) <= 0)
+        croak("Unable to initialize a keygen");
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, SvIV(bitsSV)) <= 0)
+        croak("Unable to set the rsa bits");
+
+    /* Generate key */
+    if (EVP_PKEY_generate(ctx, &rsa) <= 0)
+        croak("Unable to generate the key");
+        /* Error */
+    
+    CHECK_OPEN_SSL(rsa != NULL);
+    EVP_PKEY_CTX_free(ctx);
 #else
     rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
+    CHECK_OPEN_SSL(rsa != -1);
 #endif
     CHECK_OPEN_SSL(rsa);
     RETVAL = make_rsa_obj(proto, rsa);
@@ -382,7 +597,11 @@ _new_key_from_parameters(proto, n, e, d, p, q)
     BIGNUM* p;
     BIGNUM* q;
   PREINIT:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY *rsa = NULL;
+#else
     RSA* rsa;
+#endif
     BN_CTX* ctx;
     BIGNUM* p_minus_1 = NULL;
     BIGNUM* q_minus_1 = NULL;
@@ -396,10 +615,29 @@ _new_key_from_parameters(proto, n, e, d, p, q)
     {
         croak("At least a modulus and public key must be provided");
     }
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+    if (pctx == NULL)
+        croak("Error: failed to construct params from build");
+    if ( EVP_PKEY_fromdata_init(pctx) <= 0)
+        croak("Error: EVP_PKEY_fromdata_init failed");
+    OSSL_PARAM_BLD *params_build = OSSL_PARAM_BLD_new();
+    if ( ! params_build )
+        croak ("OSSL_PARAM_BLD_new error");
+    BIGNUM* nt = BN_new();
+#else
     CHECK_OPEN_SSL(rsa = RSA_new());
+#endif
 #if OLD_CRUFTY_SSL_VERSION
     rsa->n = n;
     rsa->e = e;
+#endif
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_N, n) )
+        croak ("OSSL_PARAM_BLD_push_BN 'n' error");
+
+    if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_E, e) )
+        croak ("OSSL_PARAM_BLD_push_BN 'e' error");
 #endif
     if (p || q)
     {
@@ -419,7 +657,10 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         rsa->p = p;
         rsa->q = q;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+#else
         THROW(RSA_set0_factors(rsa, p, q));
+#endif
 #endif
         THROW(p_minus_1 = BN_new());
         THROW(BN_sub(p_minus_1, p, BN_value_one()));
@@ -434,7 +675,16 @@ _new_key_from_parameters(proto, n, e, d, p, q)
 #if OLD_CRUFTY_SSL_VERSION
         rsa->d = d;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_D, d) )
+            croak ("OSSL_PARAM_BLD_push_BN 'd' error");
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_FACTOR1, p) )
+            croak ("OSSL_PARAM_BLD_push_BN 'p' error");
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_FACTOR2, q) )
+            croak ("OSSL_PARAM_BLD_push_BN 'q' error");
+#else
         THROW(RSA_set0_key(rsa, n, e, d));
+#endif
 #endif
         THROW(dmp1 = BN_new());
         THROW(BN_mod(dmp1, d, p_minus_1, ctx));
@@ -447,10 +697,48 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         rsa->dmq1 = dmq1;
         rsa->iqmp = iqmp;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1) )
+            croak ("OSSL_PARAM_BLD_push_BN 'dmp1' error");
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1) )
+            croak ("OSSL_PARAM_BLD_push_BN 'dmq1' error");
+        if ( !OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp) )
+            croak ("OSSL_PARAM_BLD_push_BN 'iqmp' error");
+
+        OSSL_PARAM *params = NULL;
+        params = OSSL_PARAM_BLD_to_param(params_build);
+        if ( params == NULL )
+            croak("Error: failed to construct params from build");
+
+        int status = EVP_PKEY_fromdata(pctx, &rsa, EVP_PKEY_KEYPAIR, params);
+        if ( status <= 0 || rsa == NULL )
+            croak("Unable to build key");
+        EVP_PKEY_CTX* testctx = EVP_PKEY_CTX_new(rsa, NULL);
+        if (!testctx) croak("Testing key failed");
+        EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_N, &nt);
+        //BIGNUM *n2;
+        //if (EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_N, &n2) <= 0)
+        //    croak("Unable VP_PKEY_get_bn_param");
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_N);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_FACTOR1);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_FACTOR2);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_D);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_E);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT1);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT2);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_COEFFICIENT1);
+        //printf("========================================================================\n");
+#else
         THROW(RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp));
 #endif
+#endif
         dmp1 = dmq1 = iqmp = NULL;
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+        OSSL_PARAM_BLD_free(params_build);
+        OSSL_PARAM_free(params);
+#else
         THROW(RSA_check_key(rsa) == 1);
+#endif
      err:
         if (p_minus_1) BN_clear_free(p_minus_1);
         if (q_minus_1) BN_clear_free(q_minus_1);
@@ -460,7 +748,11 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         if (ctx) BN_CTX_free(ctx);
         if (error)
         {
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+            EVP_PKEY_free(rsa);
+#else
             RSA_free(rsa);
+#endif
             CHECK_OPEN_SSL(0);
         }
     }
@@ -469,7 +761,10 @@ _new_key_from_parameters(proto, n, e, d, p, q)
 #if OLD_CRUFTY_SSL_VERSION
         rsa->d = d;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+#else
         CHECK_OPEN_SSL(RSA_set0_key(rsa, n, e, d));
+#endif
 #endif
     }
     RETVAL = make_rsa_obj(proto, rsa);
@@ -481,6 +776,16 @@ void
 _get_key_parameters(p_rsa)
     rsaData* p_rsa;
 PREINIT:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    BIGNUM* n = NULL;
+    BIGNUM* e = NULL;
+    BIGNUM* d = NULL;
+    BIGNUM* p = NULL;
+    BIGNUM* q = NULL;
+    BIGNUM* dmp1 = NULL;
+    BIGNUM* dmq1 = NULL;
+    BIGNUM* iqmp = NULL;
+#else
     const BIGNUM* n;
     const BIGNUM* e;
     const BIGNUM* d;
@@ -489,9 +794,14 @@ PREINIT:
     const BIGNUM* dmp1;
     const BIGNUM* dmq1;
     const BIGNUM* iqmp;
+#endif
 PPCODE:
 {
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY* rsa;
+#else
     RSA* rsa;
+#endif
     rsa = p_rsa->rsa;
 #if OLD_CRUFTY_SSL_VERSION
     n = rsa->n;
@@ -503,9 +813,28 @@ PPCODE:
     dmq1 = rsa->dmq1;
     iqmp = rsa->iqmp;
 #else
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_N);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_D);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_E);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_FACTOR1);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_FACTOR2);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT1);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT2);
+        //print_parameter(rsa, OSSL_PKEY_PARAM_RSA_COEFFICIENT1);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_N, &n);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_E, &e);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_D, &d);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_FACTOR1, &p);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_FACTOR2, &q);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT1, &dmp1);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_EXPONENT2, &dmq1);
+    EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, &iqmp);
+#else
     RSA_get0_key(rsa, &n, &e, &d);
     RSA_get0_factors(rsa, &p, &q);
     RSA_get0_crt_params(rsa, &dmp1, &dmq1, &iqmp);
+#endif
 #endif
     XPUSHs(cor_bn2sv(n));
     XPUSHs(cor_bn2sv(e));
@@ -522,7 +851,11 @@ encrypt(p_rsa, p_plaintext)
     rsaData* p_rsa;
     SV* p_plaintext;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_encrypt, ENCRYPT);
+#else
     RETVAL = rsa_crypt(p_rsa, p_plaintext, RSA_public_encrypt);
+#endif
   OUTPUT:
     RETVAL
 
@@ -535,7 +868,11 @@ decrypt(p_rsa, p_ciphertext)
     {
         croak("Public keys cannot decrypt");
     }
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_decrypt, DECRYPT);
+#else
     RETVAL = rsa_crypt(p_rsa, p_ciphertext, RSA_private_decrypt);
+#endif
   OUTPUT:
     RETVAL
 
@@ -548,7 +885,11 @@ private_encrypt(p_rsa, p_plaintext)
     {
         croak("Public keys cannot private_encrypt");
     }
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_sign, PRIVATE_ENCRYPT);
+#else
     RETVAL = rsa_crypt(p_rsa, p_plaintext, RSA_private_encrypt);
+#endif
   OUTPUT:
     RETVAL
 
@@ -557,7 +898,11 @@ public_decrypt(p_rsa, p_ciphertext)
     rsaData* p_rsa;
     SV* p_ciphertext;
   CODE:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_verify_recover, PUBLIC_DECRYPT);
+#else
     RETVAL = rsa_crypt(p_rsa, p_ciphertext, RSA_public_decrypt);
+#endif
   OUTPUT:
     RETVAL
 
@@ -565,7 +910,7 @@ int
 size(p_rsa)
     rsaData* p_rsa;
   CODE:
-    RETVAL = RSA_size(p_rsa->rsa);
+    RETVAL = get_key_size(p_rsa);
   OUTPUT:
     RETVAL
 
@@ -577,7 +922,12 @@ check_key(p_rsa)
     {
         croak("Public keys cannot be checked");
     }
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_pkey(NULL, p_rsa->rsa, NULL);
+    RETVAL = EVP_PKEY_private_check(pctx);
+#else
     RETVAL = RSA_check_key(p_rsa->rsa);
+#endif
   OUTPUT:
     RETVAL
 
@@ -643,7 +993,6 @@ use_sha512_hash(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->hashMode =  NID_sha512;
-
 #endif
 
 void
@@ -699,7 +1048,11 @@ sign(p_rsa, text_SV)
   PREINIT:
     char* signature;
     unsigned char* digest;
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    size_t signature_length;
+#else
     unsigned int signature_length;
+#endif
   CODE:
 {
     if (!_is_private(p_rsa))
@@ -707,15 +1060,57 @@ sign(p_rsa, text_SV)
         croak("Public keys cannot sign messages");
     }
 
-    CHECK_NEW(signature, RSA_size(p_rsa->rsa), char);
+    CHECK_NEW(signature, get_key_size(p_rsa), char);
 
     CHECK_OPEN_SSL(digest = get_message_digest(text_SV, p_rsa->hashMode));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *ctx;
+    ctx = EVP_PKEY_CTX_new(p_rsa->rsa, NULL /* no engine */);
+    if (!ctx)
+        printf("sign: Failed to create ctx EVP_PKEY_CTX_new()\n");
+    if(!EVP_PKEY_sign_init(ctx)) {
+        printf("sign: Failed to initialize signing\n");
+    }
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0) {
+        printf("sign: Failed to set padding EVP_PKEY_CTX_set_rsa_padding\n");
+    }
+    EVP_MD* md = get_md_bynid(p_rsa->hashMode);
+    if (md == NULL) {
+        printf("Unknown message digest %i\n", p_rsa->hashMode);
+    }
+    int md_status;
+    if ((md_status = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
+
+        printf("sign: Failed to set signature md: %i\n", md_status);
+    }
+    /* Determine buffer length */
+    if (EVP_PKEY_sign(ctx, NULL, &signature_length, digest, get_digest_length(p_rsa->hashMode)) <= 0)
+        printf("sign: Failed to determine buffer length\n");
+
+    signature = OPENSSL_malloc(signature_length);
+
+    if (!signature)
+        printf("sign: Failed to alocate length\n");
+    /* malloc failure */
+
+    if (EVP_PKEY_sign(ctx, signature, &signature_length, digest, get_digest_length(p_rsa->hashMode)) <= 0)
+        printf("sign: failed calling EVP_PKEY_sign %s\n", signature);
+    /* Error */
+    /*
+    EVP_PKEY_sign(ctx,
+                  (unsigned char*) signature, &signature_length,
+                  const unsigned char *tbs, size_t tbslen);
+
+     Error */
+    CHECK_OPEN_SSL(signature);
+#else
     CHECK_OPEN_SSL(RSA_sign(p_rsa->hashMode,
                             digest,
                             get_digest_length(p_rsa->hashMode),
                             (unsigned char*) signature,
                             &signature_length,
                             p_rsa->rsa));
+#endif
     RETVAL = newSVpvn(signature, signature_length);
     Safefree(signature);
 }
@@ -736,18 +1131,40 @@ PPCODE:
     STRLEN sig_length;
 
     sig = (unsigned char*) SvPV(sig_SV, sig_length);
-    if (RSA_size(p_rsa->rsa) < sig_length)
+    if (get_key_size(p_rsa) < sig_length)
     {
         croak("Signature longer than key");
     }
 
     CHECK_OPEN_SSL(digest = get_message_digest(text_SV, p_rsa->hashMode));
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    EVP_PKEY_CTX *ctx;
+    ctx = EVP_PKEY_CTX_new(p_rsa->rsa, NULL /* no engine */);
+    if (!ctx)
+        printf("sign: Failed to create ctx EVP_PKEY_CTX_new()\n");
+    if (EVP_PKEY_verify_init(ctx) <= 0) {
+        printf("verify: Failed to intialize EVP_PKEY_verify_init\n");
+    }
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) <= 0)
+        printf("verify: Failed to set the PADDING\n");
+    EVP_MD* md = get_md_bynid(p_rsa->hashMode);
+    if (md == NULL) {
+        printf("Unknown message digest %i\n", p_rsa->hashMode);
+    }
+    int md_status;
+    if ((md_status = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
+
+        printf("sign: Failed to set signature md: %i\n", md_status);
+    }
+    switch (EVP_PKEY_verify(ctx, sig, sig_length, digest, get_digest_length(p_rsa->hashMode)))
+#else
     switch(RSA_verify(p_rsa->hashMode,
                       digest,
                       get_digest_length(p_rsa->hashMode),
                       sig,
                       sig_length,
                       p_rsa->rsa))
+#endif
     {
         case 0:
             ERR_clear_error();
