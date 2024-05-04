@@ -539,14 +539,21 @@ generate_key(proto, bitsSV, exponent = 65537)
 #endif
   CODE:
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    BIGNUM *e;
+    e = BN_new();
+    BN_set_word(e, exponent);
+
     ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
     CHECK_OPEN_SSL(ctx);
     CHECK_OPEN_SSL(EVP_PKEY_keygen_init(ctx) == 1);
     CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, SvIV(bitsSV)) > 0);
+    CHECK_OPEN_SSL(EVP_PKEY_CTX_set1_rsa_keygen_pubexp(ctx, e) >0);
     CHECK_OPEN_SSL(EVP_PKEY_generate(ctx, &rsa) == 1);
     CHECK_OPEN_SSL(rsa != NULL);
 
+    e = NULL;
+    BN_free(e);
     EVP_PKEY_CTX_free(ctx);
 #else
     rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
