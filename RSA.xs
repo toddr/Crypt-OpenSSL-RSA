@@ -17,7 +17,7 @@
 #if OPENSSL_VERSION_NUMBER >= 0x00908000L
 #include <openssl/core_names.h>
 #include <openssl/param_build.h>
-//#include <openssl/decoder.h>
+#include <openssl/encoder.h>
 #endif
 
 typedef struct
@@ -521,7 +521,16 @@ get_public_key_string(p_rsa)
   CODE:
     CHECK_OPEN_SSL(stringBIO = BIO_new(BIO_s_mem()));
 #if OPENSSL_VERSION_NUMBER >= 0x00908000L
-    PEM_write_bio_PUBKEY(stringBIO, p_rsa->rsa);
+    OSSL_ENCODER_CTX *ctx = NULL;
+
+    ctx = OSSL_ENCODER_CTX_new_for_pkey(p_rsa->rsa, OSSL_KEYMGMT_SELECT_PUBLIC_KEY,
+            "PEM", "PKCS1", NULL);
+    if (ctx == NULL || !OSSL_ENCODER_CTX_get_num_encoders(ctx)) {
+        croak("Failed to get an encoder context");
+    }
+    OSSL_ENCODER_to_bio(ctx, stringBIO);
+
+    OSSL_ENCODER_CTX_free(ctx);
 #else
     PEM_write_bio_RSAPublicKey(stringBIO, p_rsa->rsa);
 #endif
@@ -575,7 +584,7 @@ generate_key(proto, bitsSV, exponent = 65537)
     if (EVP_PKEY_generate(ctx, &rsa) <= 0)
         croak("Unable to generate the key");
         /* Error */
-    
+
     CHECK_OPEN_SSL(rsa != NULL);
     EVP_PKEY_CTX_free(ctx);
 #else
