@@ -176,18 +176,24 @@ EVP_MD *get_md_bynid(int hash_method)
     }
 }
 #endif
-
 unsigned char* get_message_digest(SV* text_SV, int hash_method)
 {
     STRLEN text_length;
     unsigned char* text;
-
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+    unsigned char *md;
+    size_t *mdlen;
+    CHECK_NEW(md, get_digest_length(hash_method), unsigned char);
+#endif
     text = (unsigned char*) SvPV(text_SV, text_length);
-
     switch(hash_method)
     {
         case NID_md5:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+            return EVP_Q_digest(NULL, "MD5", NULL, text, text_length, md, NULL) ? md : NULL;
+#else
             return MD5(text, text_length, NULL);
+#endif
             break;
         case NID_sha1:
             return SHA1(text, text_length, NULL);
@@ -207,7 +213,11 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
             break;
 #endif
         case NID_ripemd160:
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L
+            return EVP_Q_digest(NULL, "RIPEMD160", NULL, text, text_length, md, NULL) ? md : NULL;
+#else
             return RIPEMD160(text, text_length, NULL);
+#endif
             break;
 #ifdef WHIRLPOOL_DIGEST_LENGTH
         case NID_whirlpool:
