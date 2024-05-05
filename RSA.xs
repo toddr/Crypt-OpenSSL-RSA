@@ -593,6 +593,7 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         croak("At least a modulus and public key must be provided");
     }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    OSSL_PARAM *params = NULL;
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
     CHECK_OPEN_SSL(pctx != NULL);
     CHECK_OPEN_SSL(EVP_PKEY_fromdata_init(pctx) > 0);
@@ -669,7 +670,6 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         THROW(OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1));
         THROW(OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp));
 
-        OSSL_PARAM *params = NULL;
         params = OSSL_PARAM_BLD_to_param(params_build);
         THROW(params != NULL);
 
@@ -711,6 +711,13 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         rsa->d = d;
 #else
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        params = OSSL_PARAM_BLD_to_param(params_build);
+        THROW(params != NULL);
+
+        int status = EVP_PKEY_fromdata(pctx, &rsa, EVP_PKEY_KEYPAIR, params);
+        THROW( status > 0 && rsa != NULL );
+        //EVP_PKEY_CTX* test_ctx = EVP_PKEY_CTX_new_from_pkey(NULL, rsa, NULL);
+        //THROW(EVP_PKEY_check(test_ctx) == 1);
 #else
         CHECK_OPEN_SSL(RSA_set0_key(rsa, n, e, d));
 #endif
