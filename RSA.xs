@@ -315,18 +315,23 @@ SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     STRLEN from_length;
     size_t to_length;
+    unsigned char* to;
 #else
     STRLEN from_length;
     int to_length;
+    char* to;
 #endif
     int size;
     unsigned char* from;
-    char* to;
     SV* sv;
 
     from = (unsigned char*) SvPV(p_from, from_length);
     size = get_key_size(p_rsa);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    CHECK_NEW(to, size, unsigned char);
+#else
     CHECK_NEW(to, size, char);
+#endif
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX *ctx;
 
@@ -370,7 +375,7 @@ SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
         Safefree(to);
         CHECK_OPEN_SSL(0);
     }
-    sv = newSVpv(to, to_length);
+    sv = newSVpv((char *) to, to_length);
     Safefree(to);
     return sv;
 }
@@ -452,7 +457,11 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
     SV* cipher_name_SV;
   PREINIT:
     BIO* stringBIO;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    unsigned char* passphase = NULL;
+#else
     char* passphase = NULL;
+#endif
     STRLEN passphaseLength = 0;
     char* cipher_name;
     const EVP_CIPHER* enc = NULL;
@@ -461,7 +470,7 @@ get_private_key_string(p_rsa, passphase_SV=&PL_sv_undef, cipher_name_SV=&PL_sv_u
         croak("Passphrase is required for cipher");
     }
     if (SvPOK(passphase_SV)) {
-        passphase = SvPV(passphase_SV, passphaseLength);
+        passphase = (unsigned char *) SvPV(passphase_SV, passphaseLength);
         if (SvPOK(cipher_name_SV)) {
             cipher_name = SvPV_nolen(cipher_name_SV);
         }
@@ -1009,11 +1018,12 @@ sign(p_rsa, text_SV)
     rsaData* p_rsa;
     SV* text_SV;
   PREINIT:
-    char* signature;
     unsigned char* digest;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    unsigned char* signature;
     size_t signature_length;
 #else
+    char* signature;
     unsigned int signature_length;
 #endif
   CODE:
@@ -1022,8 +1032,11 @@ sign(p_rsa, text_SV)
     {
         croak("Public keys cannot sign messages");
     }
-
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    CHECK_NEW(signature, get_key_size(p_rsa), unsigned char);
+#else
     CHECK_NEW(signature, get_key_size(p_rsa), char);
+#endif
 
     CHECK_OPEN_SSL(digest = get_message_digest(text_SV, p_rsa->hashMode));
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -1056,7 +1069,7 @@ sign(p_rsa, text_SV)
                             &signature_length,
                             p_rsa->rsa));
 #endif
-    RETVAL = newSVpvn(signature, signature_length);
+    RETVAL = newSVpvn((const char *)signature, signature_length);
     Safefree(signature);
 }
   OUTPUT:
