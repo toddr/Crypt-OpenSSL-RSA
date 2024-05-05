@@ -31,13 +31,6 @@ typedef struct
     int hashMode;
 } rsaData;
 
-enum {
-    DECRYPT,
-    ENCRYPT,
-    PUBLIC_DECRYPT,
-    PRIVATE_ENCRYPT
-};
-
 /* Key names for the rsa hash structure */
 
 #define KEY_KEY "_Key"
@@ -304,7 +297,8 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
-              int (*p_crypt)(EVP_PKEY_CTX*, unsigned char*, size_t*, const unsigned char*, size_t), int enc)
+              int (*p_crypt)(EVP_PKEY_CTX*, unsigned char*, size_t*, const unsigned char*, size_t),
+              int (*init_crypt)(EVP_PKEY_CTX*))
 #else
 
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
@@ -337,32 +331,10 @@ SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
     ctx = EVP_PKEY_CTX_new((EVP_PKEY *)p_rsa->rsa, NULL);
     CHECK_OPEN_SSL(ctx);
 
-    switch (enc) {
-        case DECRYPT:
-            CHECK_OPEN_SSL(EVP_PKEY_decrypt_init(ctx) == 1);
-            CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) > 0);
-            CHECK_OPEN_SSL(p_crypt(ctx, NULL, &to_length, from, from_length) == 1);
-            CHECK_OPEN_SSL(p_crypt(ctx, to, &to_length, from, from_length) == 1);
-            break;
-        case ENCRYPT:
-            CHECK_OPEN_SSL(EVP_PKEY_encrypt_init(ctx) == 1);
-            CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) > 0);
-            CHECK_OPEN_SSL(p_crypt(ctx, NULL, &to_length, from, from_length) == 1);
-            CHECK_OPEN_SSL(p_crypt(ctx, to, &to_length, from, from_length) == 1);
-            break;
-        case PUBLIC_DECRYPT:
-            CHECK_OPEN_SSL(EVP_PKEY_verify_recover_init(ctx) == 1);
-            CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) > 0);
-            CHECK_OPEN_SSL(p_crypt(ctx, NULL, &to_length, from, from_length) == 1);
-            CHECK_OPEN_SSL(p_crypt(ctx, to, &to_length, from, from_length) == 1);
-            break;
-        case PRIVATE_ENCRYPT:
-            CHECK_OPEN_SSL(EVP_PKEY_sign_init(ctx) == 1);
-            CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) > 0);
-            CHECK_OPEN_SSL(p_crypt(ctx, NULL, &to_length, from, from_length) == 1);
-            CHECK_OPEN_SSL(p_crypt(ctx, to, &to_length, from, from_length) == 1);
-            break;
-    }
+    CHECK_OPEN_SSL(init_crypt(ctx) == 1);
+    CHECK_OPEN_SSL(EVP_PKEY_CTX_set_rsa_padding(ctx, p_rsa->padding) > 0);
+    CHECK_OPEN_SSL(p_crypt(ctx, NULL, &to_length, from, from_length) == 1);
+    CHECK_OPEN_SSL(p_crypt(ctx, to, &to_length, from, from_length) == 1);
 
     EVP_PKEY_CTX_free(ctx);
 #else
@@ -822,7 +794,7 @@ encrypt(p_rsa, p_plaintext)
     SV* p_plaintext;
   CODE:
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_encrypt, ENCRYPT);
+    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_encrypt, EVP_PKEY_encrypt_init);
 #else
     RETVAL = rsa_crypt(p_rsa, p_plaintext, RSA_public_encrypt);
 #endif
@@ -839,7 +811,7 @@ decrypt(p_rsa, p_ciphertext)
         croak("Public keys cannot decrypt");
     }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_decrypt, DECRYPT);
+    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_decrypt, EVP_PKEY_decrypt_init);
 #else
     RETVAL = rsa_crypt(p_rsa, p_ciphertext, RSA_private_decrypt);
 #endif
@@ -856,7 +828,7 @@ private_encrypt(p_rsa, p_plaintext)
         croak("Public keys cannot private_encrypt");
     }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_sign, PRIVATE_ENCRYPT);
+    RETVAL = rsa_crypt(p_rsa, p_plaintext, EVP_PKEY_sign, EVP_PKEY_sign_init);
 #else
     RETVAL = rsa_crypt(p_rsa, p_plaintext, RSA_private_encrypt);
 #endif
@@ -869,7 +841,7 @@ public_decrypt(p_rsa, p_ciphertext)
     SV* p_ciphertext;
   CODE:
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_verify_recover, PUBLIC_DECRYPT);
+    RETVAL = rsa_crypt(p_rsa, p_ciphertext, EVP_PKEY_verify_recover, EVP_PKEY_verify_recover_init);
 #else
     RETVAL = rsa_crypt(p_rsa, p_ciphertext, RSA_public_decrypt);
 #endif
