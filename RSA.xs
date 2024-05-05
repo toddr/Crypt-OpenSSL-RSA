@@ -540,11 +540,21 @@ generate_key(proto, bitsSV, exponent = 65537)
     RSA* rsa;
 #endif
   CODE:
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     BIGNUM *e;
     e = BN_new();
     BN_set_word(e, exponent);
-
+#if OPENSSL_VERSION_NUMBER < 0x00908000L
+    rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
+    CHECK_OPEN_SSL(rsa != -1);
+#endif
+#if OPENSSL_VERSION_NUMBER >= 0x00908000L && OPENSSL_VERSION_NUMBER < 0x30000000L
+    int rc;
+    rsa = RSA_new();
+    rc = RSA_generate_key_ex(rsa, SvIV(bitsSV), e, NULL);
+￼   BN_free(e);
+    CHECK_OPEN_SSL(rsa != -1);
+#endif
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
     CHECK_OPEN_SSL(ctx);
@@ -557,9 +567,6 @@ generate_key(proto, bitsSV, exponent = 65537)
     e = NULL;
     BN_free(e);
     EVP_PKEY_CTX_free(ctx);
-#else
-    rsa = RSA_generate_key(SvIV(bitsSV), exponent, NULL, NULL);
-    CHECK_OPEN_SSL(rsa != -1);
 #endif
     CHECK_OPEN_SSL(rsa);
     RETVAL = make_rsa_obj(proto, rsa);
