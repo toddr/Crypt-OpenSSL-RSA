@@ -69,6 +69,7 @@ void croakSsl(char* p_file, int p_line)
 char _is_private(rsaData* p_rsa)
 {
 #if OLD_CRUFTY_SSL_VERSION
+    const BIGNUM* d;
     d = p_rsa->rsa->d;
 #else
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
