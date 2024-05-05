@@ -82,10 +82,11 @@ char _is_private(rsaData* p_rsa)
 #endif
     return(d != NULL);
 }
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+
 SV* make_rsa_obj(SV* p_proto, EVP_PKEY* p_rsa)
 #else
+
 SV* make_rsa_obj(SV* p_proto, RSA* p_rsa)
 #endif
 {
@@ -137,8 +138,8 @@ int get_digest_length(int hash_method)
             break;
     }
 }
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+
 EVP_MD *get_md_bynid(int hash_method)
 {
     switch(hash_method)
@@ -262,13 +263,14 @@ int get_key_size(rsaData* p_rsa) {
 #endif
     return size;
 }
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+
 EVP_PKEY* _load_rsa_key(SV* p_keyStringSv,
                         EVP_PKEY*(*p_loader)(BIO *, EVP_PKEY**, pem_password_cb*, void*),
                    SV* p_passphaseSv)
 
 #else
+
 RSA* _load_rsa_key(SV* p_keyStringSv,
                    RSA*(*p_loader)(BIO*, RSA**, pem_password_cb*, void*),
                    SV* p_passphaseSv)
@@ -300,11 +302,12 @@ RSA* _load_rsa_key(SV* p_keyStringSv,
     CHECK_OPEN_SSL(rsa);
     return rsa;
 }
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
               int (*p_crypt)(EVP_PKEY_CTX*, unsigned char*, size_t*, const unsigned char*, size_t), int enc)
 #else
+
 SV* rsa_crypt(rsaData* p_rsa, SV* p_from,
               int (*p_crypt)(int, const unsigned char*, unsigned char*, RSA*, int))
 #endif
@@ -952,6 +955,7 @@ use_sha512_hash(p_rsa)
     rsaData* p_rsa;
   CODE:
     p_rsa->hashMode =  NID_sha512;
+
 #endif
 
 void
