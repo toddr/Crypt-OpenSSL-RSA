@@ -186,6 +186,7 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
     CHECK_NEW(md, get_digest_length(hash_method), unsigned char);
 #endif
     text = (unsigned char*) SvPV(text_SV, text_length);
+
     switch(hash_method)
     {
         case NID_md5:
@@ -711,6 +712,8 @@ _new_key_from_parameters(proto, n, e, d, p, q)
         rsa->d = d;
 #else
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        if(d != NULL)
+            THROW(OSSL_PARAM_BLD_push_BN(params_build, OSSL_PKEY_PARAM_RSA_D, d));
         params = OSSL_PARAM_BLD_to_param(params_build);
         THROW(params != NULL);
 
