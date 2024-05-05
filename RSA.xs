@@ -184,7 +184,6 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
     unsigned char* text;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     unsigned char *md;
-    size_t *mdlen;
     CHECK_NEW(md, get_digest_length(hash_method), unsigned char);
 #endif
     text = (unsigned char*) SvPV(text_SV, text_length);
