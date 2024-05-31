@@ -176,8 +176,7 @@ unsigned char* get_message_digest(SV* text_SV, int hash_method)
     STRLEN text_length;
     unsigned char* text;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    unsigned char *md;
-    CHECK_NEW(md, get_digest_length(hash_method), unsigned char);
+    static unsigned char md[EVP_MAX_MD_SIZE];
 #endif
     text = (unsigned char*) SvPV(text_SV, text_length);
 
