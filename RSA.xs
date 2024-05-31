@@ -709,8 +709,6 @@ _new_key_from_parameters(proto, n, e, d, p, q)
 
         int status = EVP_PKEY_fromdata(pctx, &rsa, EVP_PKEY_KEYPAIR, params);
         THROW( status > 0 && rsa != NULL );
-        //EVP_PKEY_CTX* test_ctx = EVP_PKEY_CTX_new_from_pkey(NULL, rsa, NULL);
-        //THROW(EVP_PKEY_check(test_ctx) == 1);
 #else
         CHECK_OPEN_SSL(RSA_set0_key(rsa, n, e, d));
 #endif
