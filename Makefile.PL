@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Config;
 
 use 5.006;
 use ExtUtils::MakeMaker 6.48;
@@ -7,6 +8,11 @@ use Crypt::OpenSSL::Guess qw(openssl_inc_paths openssl_lib_paths);
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
+
+my $libs = ' -lssl -lcrypto';
+if ( $Config{osname} eq 'aix' ) {
+  $libs = $libs . ' -lz';
+}
 
 WriteMakefile(
     'NAME'             => 'Crypt::OpenSSL::RSA',
@@ -22,7 +28,7 @@ WriteMakefile(
         'Test::More'             => 0,
     },
     'OBJECT' => 'RSA.o',
-    'LIBS'   => [openssl_lib_paths() . ' -lssl -lcrypto'],
+    'LIBS'   => [openssl_lib_paths() . $libs],
     'DEFINE' => '-DPERL5 -DOPENSSL_NO_KRB5',
 
     # perl-5.8/gcc-3.2 needs -DPERL5, and redhat9 likes -DOPENSSL_NO_KRB5
