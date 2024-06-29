@@ -3,6 +3,7 @@ use Test::More;
 
 use Crypt::OpenSSL::Random;
 use Crypt::OpenSSL::RSA;
+use Crypt::OpenSSL::Guess qw(openssl_version);
 
 BEGIN { plan tests => 43 + ( UNIVERSAL::can( "Crypt::OpenSSL::RSA", "use_sha512_hash" ) ? 4 * 5 : 0 ) }
 
@@ -145,9 +146,16 @@ if ( UNIVERSAL::can( "Crypt::OpenSSL::RSA", "use_sha512_hash" ) ) {
     _Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
 }
 
-$rsa->use_ripemd160_hash();
-$rsa_pub->use_ripemd160_hash();
-_Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
+my ($major, $minor, $patch) = openssl_version();
+
+SKIP: {
+        skip "ripemd160 in legacy provider between 3.02 and 3.07", 5 if $major eq '3.0' &&
+            ($minor ge '2' && $minor le '6');
+
+        $rsa->use_ripemd160_hash();
+        $rsa_pub->use_ripemd160_hash();
+        _Test_Sign_And_Verify( $plaintext, $rsa, $rsa_pub );
+}
 
 if (UNIVERSAL::can("Crypt::OpenSSL::RSA", "use_whirlpool_hash")) {
     $rsa->use_whirlpool_hash();

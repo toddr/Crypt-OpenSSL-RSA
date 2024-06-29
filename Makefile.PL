@@ -3,8 +3,10 @@ use warnings;
 
 use 5.006;
 use ExtUtils::MakeMaker 6.48;
-use Crypt::OpenSSL::Guess qw(openssl_inc_paths openssl_lib_paths);
+use Crypt::OpenSSL::Guess qw(openssl_inc_paths openssl_lib_paths openssl_version);
 
+my ($major, $minor, $patch) = openssl_version(); 
+print "OpenSSL version: $major.$minor $patch", "\n";
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
