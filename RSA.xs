@@ -10,6 +10,9 @@
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/ripemd.h>
+#if OPENSSL_VERSION_NUMBER < 0x30000000
+#include <openssl/whrlpool.h>
+#endif
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
